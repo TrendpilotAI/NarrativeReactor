@@ -1,0 +1,1657 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="The single source of truth for the Narrative Reactor Compound Learning System architecture.">
+      
+      
+      
+        <link rel="canonical" href="https://TrendpilotAI.github.io/NarrativeReactor/architecture/compound-system/">
+      
+      
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.0">
+    
+    
+      
+        <title>Compound System Architecture - Narrative Reactor Documentation</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.618322db.min.css">
+      
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="slate" data-md-color-primary="cyan" data-md-color-accent="cyan">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#compound-system-architecture" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+<header class="md-header" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../.." title="Narrative Reactor Documentation" class="md-header__button md-logo" aria-label="Narrative Reactor Documentation" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Narrative Reactor Documentation
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Compound System Architecture
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: dark)" data-md-color-scheme="slate" data-md-color-primary="cyan" data-md-color-accent="cyan"  aria-hidden="true"  type="radio" name="__palette" id="__palette_0">
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: light)" data-md-color-scheme="default" data-md-color-primary="cyan" data-md-color-accent="cyan"  aria-hidden="true"  type="radio" name="__palette" id="__palette_1">
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+            
+<nav class="md-tabs" aria-label="Tabs" data-md-component="tabs">
+  <div class="md-grid">
+    <ul class="md-tabs__list">
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../.." class="md-tabs__link">
+        
+  
+  
+    
+  
+  Home
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../docs/architecture/README.md" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Architecture
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../docs/decisions/README.md" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Decisions
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../docs/explorations/README.md" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Explorations
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../docs/features/README.md" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Features
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../docs/solutions/README.md" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Solutions
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../docs/specs/README.md" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Specs
+
+      </a>
+    </li>
+  
+
+      
+    </ul>
+  </div>
+</nav>
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+  
+
+
+<nav class="md-nav md-nav--primary md-nav--lifted" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="Narrative Reactor Documentation" class="md-nav__button md-logo" aria-label="Narrative Reactor Documentation" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    Narrative Reactor Documentation
+  </label>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../docs/architecture/README.md" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Architecture
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../docs/decisions/README.md" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Decisions
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../docs/explorations/README.md" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Explorations
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../docs/features/README.md" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Features
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../docs/solutions/README.md" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Solutions
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../docs/specs/README.md" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Specs
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#the-compounding-philosophy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The Compounding Philosophy
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="The Compounding Philosophy">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#asset-vs-liability-mindset" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Asset vs. Liability Mindset
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#why-compounding-works" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Why Compounding Works
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#0-the-constitution" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        0. The Constitution
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#1-skills-reference" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. Skills Reference
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2-workflow-reference" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. Workflow Reference
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="2. Workflow Reference">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#core-loop" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Core Loop
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#support-workflows" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Support Workflows
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#3-automation-scripts" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. Automation Scripts
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#4-pattern-registry" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4. Pattern Registry
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#5-agent-behavior-protocol" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5. Agent Behavior Protocol
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#6-system-architecture-core-subsystems" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6. System Architecture: Core Subsystems
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="6. System Architecture: Core Subsystems">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#61-the-knowledge-engine" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6.1 The Knowledge Engine
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#62-the-workflow-engine" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6.2 The Workflow Engine
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#63-the-immune-system-pattern-enforcement" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6.3 The Immune System (Pattern Enforcement)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#64-the-nervous-system-metrics-feedback" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6.4 The Nervous System (Metrics &amp; Feedback)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#7-component-map" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        7. Component Map
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#8-metrics-health" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        8. Metrics &amp; Health
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#9-observability-feedback" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        9. Observability &amp; Feedback
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="9. Observability &amp; Feedback">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#telemetry-logs-agentlogs" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Telemetry Logs (.agent/logs/)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#aggregated-metrics-agentmetrics" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Aggregated Metrics (.agent/metrics/)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#10-directory-structure" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        10. Directory Structure
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#11-lifecycle-artifacts" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        11. Lifecycle Artifacts
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+
+<h1 id="compound-system-architecture">Compound System Architecture</h1>
+<blockquote>
+<p><strong>Core Principle:</strong> "Each unit of engineering work should make subsequent units of work easier—not harder."</p>
+</blockquote>
+<p>This document is the <strong>Single Source of Truth</strong> for the Compound System's technical architecture. It maps the skills, workflows, scripts, and patterns that drive the autonomous engineering capability of Narrative Reactor agents.</p>
+<h2 id="the-compounding-philosophy">The Compounding Philosophy</h2>
+<h3 id="asset-vs-liability-mindset">Asset vs. Liability Mindset</h3>
+<p>Every engineering artifact can be classified as an <strong>asset</strong> (makes future work easier) or a <strong>liability</strong> (adds maintenance burden):</p>
+<table>
+<thead>
+<tr>
+<th>Asset</th>
+<th>Liability</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Reusable solution documented in <code>docs/solutions/</code></td>
+<td>One-off fix buried in chat history</td>
+</tr>
+<tr>
+<td>Automated validation script</td>
+<td>Manual checklist</td>
+</tr>
+<tr>
+<td>Well-enforced pattern</td>
+<td>Tribal knowledge</td>
+</tr>
+</tbody>
+</table>
+<p><strong>The Compound System is designed to maximize assets and minimize liabilities.</strong></p>
+<h3 id="why-compounding-works">Why Compounding Works</h3>
+<ol>
+<li><strong>Search Before Solve</strong>: Agents check <code>docs/solutions/</code> before implementing, discovering existing solutions.</li>
+<li><strong>Document After Success</strong>: The <code>/compound</code> workflow captures new solutions immediately.</li>
+<li><strong>Enforce via Automation</strong>: Scripts like <code>validate-compound.sh</code> and <code>pre-push-housekeeping.sh</code> prevent drift.</li>
+</ol>
+<p><strong>Result:</strong> Each solved problem becomes a 10x multiplier for the next similar problem.</p>
+<h2 id="0-the-constitution">0. The Constitution</h2>
+<p>The primary configuration and behavioral protocol for all agents is defined in:</p>
+<p>👉 <strong><a href="../../GEMINI.md"><code>GEMINI.md</code></a></strong></p>
+<p><strong>This file is the "kernel" of the Compound System.</strong> It controls:
+- <strong>Agent Identity &amp; Philosophy</strong>: The compounding mindset
+- <strong>Core 12-Point Behavior Protocol</strong>: Systematic execution rules (see Section 5)
+- <strong>Mandatory Workflow Bindings</strong>: When to use <code>/explore</code>, <code>/plan</code>, <code>/compound</code>, etc.</p>
+<p><strong>Key Insight:</strong> While <code>docs/architecture/compound-system.md</code> (this document) describes <em>what exists</em>, <code>GEMINI.md</code> describes <em>how agents should behave</em>. Together they form a complete specification:
+- <strong>Architecture (this doc)</strong>: System structure, components, data flows
+- <strong>Constitution (GEMINI.md)</strong>: Agent behavior, decision protocols, priorities</p>
+<p><strong>Enforcement:</strong> <code>GEMINI.md</code> is injected into every agent context via user rules, making it impossible for agents to operate without adhering to the protocol.</p>
+<hr />
+<h2 id="1-skills-reference">1. Skills Reference</h2>
+<p>Modular capabilities that agents can invoke.</p>
+<table>
+<thead>
+<tr>
+<th>Skill</th>
+<th>Purpose</th>
+<th>Entry Point</th>
+<th>Usage</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>session-resume</code></td>
+<td>Restore context at session start</td>
+<td><a href="../../skills/session-resume/SKILL.md"><code>skills/session-resume/SKILL.md</code></a></td>
+<td><strong>Mandatory</strong> (-1)</td>
+</tr>
+<tr>
+<td><code>compound-docs</code></td>
+<td>Search/document solutions</td>
+<td><a href="../../skills/compound-docs/SKILL.md"><code>skills/compound-docs/SKILL.md</code></a></td>
+<td><strong>Mandatory</strong> (Step 0)</td>
+</tr>
+<tr>
+<td><code>file-todos</code></td>
+<td>Manage file-based tasks/todos</td>
+<td><a href="../../skills/file-todos/SKILL.md"><code>skills/file-todos/SKILL.md</code></a></td>
+<td>As needed</td>
+</tr>
+<tr>
+<td><code>code-review</code></td>
+<td>Multi-perspective quality gates</td>
+<td><a href="../../skills/code-review/SKILL.md"><code>skills/code-review/SKILL.md</code></a></td>
+<td>During <code>/review</code></td>
+</tr>
+<tr>
+<td><code>testing</code></td>
+<td>Unified test patterns</td>
+<td><a href="../../skills/testing/SKILL.md"><code>skills/testing/SKILL.md</code></a></td>
+<td>During <code>/work</code></td>
+</tr>
+<tr>
+<td><code>debug</code></td>
+<td>Structured root cause analysis</td>
+<td><a href="../../skills/debug/SKILL.md"><code>skills/debug/SKILL.md</code></a></td>
+<td>On failure</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="2-workflow-reference">2. Workflow Reference</h2>
+<p>Standardized operating procedures for engineering tasks.</p>
+<h3 id="core-loop">Core Loop</h3>
+<table>
+<thead>
+<tr>
+<th>Command</th>
+<th>Purpose</th>
+<th>Implicit Trigger Phrases</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>/explore</code></td>
+<td>Deep investigation (pre-plan)</td>
+<td>"I need to understand...", "Let me investigate..."</td>
+</tr>
+<tr>
+<td><code>/specs</code></td>
+<td>Multi-session initiatives</td>
+<td>N/A (Strategic decision)</td>
+</tr>
+<tr>
+<td><code>/plan</code></td>
+<td>Create implementation plans</td>
+<td>Before significant work</td>
+</tr>
+<tr>
+<td><code>/work</code></td>
+<td>Execute plans systematically</td>
+<td>"Proceed", "Go ahead", "LGTM"</td>
+</tr>
+<tr>
+<td><code>/review</code></td>
+<td>Quality check before merge</td>
+<td>"Ship it", "Ready to merge"</td>
+</tr>
+<tr>
+<td><code>/compound</code></td>
+<td>Capture knowledge</td>
+<td>"That worked", "It's fixed"</td>
+</tr>
+<tr>
+<td><code>/housekeeping</code></td>
+<td>Pre-push cleanup</td>
+<td>Before git push</td>
+</tr>
+</tbody>
+</table>
+<h3 id="support-workflows">Support Workflows</h3>
+<p><em>See <a href="../../.agent/workflows/README.md">.agent/workflows/README.md</a> for full list.</em></p>
+<ul>
+<li><strong>Planning:</strong> <code>/plan_review</code></li>
+<li><strong>Triage:</strong> <code>/triage</code>, <code>/resolve_todo</code></li>
+<li><strong>Code Review:</strong> <code>/resolve_pr</code></li>
+<li><strong>Docs:</strong> <code>/changelog</code>, <code>/release-docs</code>, <code>/deploy-docs</code></li>
+<li><strong>Debug:</strong> <code>/report-bug</code>, <code>/reproduce-bug</code></li>
+<li><strong>Maintenance:</strong> <code>/compound_health</code>, <code>/adr</code>, <code>/promote_pattern</code></li>
+<li><strong>Extension:</strong> <code>/create-agent-skill</code>, <code>/heal-skill</code>, <code>/generate_command</code>, <code>/skill-review</code></li>
+<li><strong>Process:</strong> <code>/triage-sprint</code></li>
+<li><strong>Platform:</strong> <code>/xcode-test</code></li>
+</ul>
+<hr />
+<h2 id="3-automation-scripts">3. Automation Scripts</h2>
+<p>The nervous system that connects skills and workflows.</p>
+<table>
+<thead>
+<tr>
+<th>Script</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>scripts/compound-search.sh</code></td>
+<td>Knowledge retrieval engine</td>
+</tr>
+<tr>
+<td><code>scripts/validate-architecture.sh</code></td>
+<td><strong>Enforces this document's accuracy</strong></td>
+</tr>
+<tr>
+<td><code>scripts/validate-compound.sh</code></td>
+<td>Validates solution YAML &amp; pattern registry</td>
+</tr>
+<tr>
+<td><code>scripts/pre-push-housekeeping.sh</code></td>
+<td>Git hook for system health</td>
+</tr>
+<tr>
+<td><code>scripts/compound-metrics.sh</code></td>
+<td>Telemetry aggregation</td>
+</tr>
+<tr>
+<td><code>scripts/compound-dashboard.sh</code></td>
+<td>Daily health visualization</td>
+</tr>
+<tr>
+<td><code>scripts/audit-state-drift.sh</code></td>
+<td>Lifecycle consistency check</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="4-pattern-registry">4. Pattern Registry</h2>
+<p>The "Antibodies" of the system—preventing recurring mistakes.</p>
+<p><em>Source: <a href="../../docs/solutions/patterns/critical-patterns.md"><code>docs/solutions/patterns/critical-patterns.md</code></a></em></p>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>Pattern</th>
+<th>Core Principle</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>Searh Before Solving</td>
+<td>Always check existing solutions.</td>
+</tr>
+<tr>
+<td>...</td>
+<td>...</td>
+<td>(See critical-patterns.md for full list)</td>
+</tr>
+</tbody>
+</table>
+<p><em>(Refer to source file for the complete, up-to-date registry)</em></p>
+<hr />
+<h2 id="5-agent-behavior-protocol">5. Agent Behavior Protocol</h2>
+<p>-1. <strong>Resume Context:</strong> Run <code>skills/session-resume/SKILL.md</code> at start.
+0. <strong>Check Specs:</strong> Look for active multi-session initiatives.
+1. <strong>Search First:</strong> Use <code>compound-search.sh</code> before solving.
+2. <strong>Deep Explore:</strong> Use <code>/explore</code> for complex problems.
+3. <strong>Document:</strong> Run <code>/compound</code> after success.
+4. <strong>Follow Patterns:</strong> Adhere to <code>critical-patterns.md</code>.
+5. <strong>Use Workflows:</strong> Formal protocols over ad-hoc work.
+6. <strong>Create Todos:</strong> Deferred work must be tracked in <code>todos/</code>.
+7. <strong>Housekeeping:</strong> Clean up before pushing.
+8. <strong>Weekly Health:</strong> Run <code>./scripts/compound-health.sh</code> Mondays.
+9. <strong>Record ADRs:</strong> Document architectural decisions.
+10. <strong>Daily Health:</strong> Run <code>./scripts/compound-dashboard.sh</code> daily.
+11. <strong>Instrument Skills:</strong> Add telemetry to new skills.</p>
+<hr />
+<h2 id="6-system-architecture-core-subsystems">6. System Architecture: Core Subsystems</h2>
+<p>The Compound System is built on four interconnected subsystems that work together to enable autonomous engineering.</p>
+<h3 id="61-the-knowledge-engine">6.1 The Knowledge Engine</h3>
+<p><strong>Purpose:</strong> Transform solved problems into reusable assets.</p>
+<p><strong>Mechanism: The Search → Solve → Compound Loop</strong></p>
+<pre class="mermaid"><code>sequenceDiagram
+    participant Agent
+    participant Search as compound-search.sh
+    participant Solutions as docs/solutions/
+    participant Compound as /compound
+
+    Agent-&gt;&gt;Search: Problem keywords
+    Search-&gt;&gt;Solutions: Query knowledge base
+    Solutions--&gt;&gt;Agent: Matching solutions (or none)
+
+    alt Solution Found
+        Agent-&gt;&gt;Agent: Reuse existing solution
+    else No Solution
+        Agent-&gt;&gt;Agent: Solve problem (original work)
+        Agent-&gt;&gt;Compound: Document solution
+        Compound-&gt;&gt;Solutions: Store for future reuse
+    end</code></pre>
+<p><strong>Key Components:</strong></p>
+<table>
+<thead>
+<tr>
+<th>Component</th>
+<th>Role</th>
+<th>Implementation</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>compound-search.sh</code></td>
+<td>Knowledge retrieval</td>
+<td>Full-text search across <code>docs/solutions/</code></td>
+</tr>
+<tr>
+<td><code>/compound</code> workflow</td>
+<td>Knowledge capture</td>
+<td>Structured solution documentation</td>
+</tr>
+<tr>
+<td><code>validate-compound.sh</code></td>
+<td>Quality gate</td>
+<td>YAML schema + pattern validation</td>
+</tr>
+<tr>
+<td>Solution frontmatter</td>
+<td>Metadata index</td>
+<td>Enables search by category, date, tags</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Data Flow:</strong>
+1. Agent receives task → runs <code>compound-search.sh {keywords}</code>
+2. If hit: Agent reads solution, references it, updates <code>last_referenced</code> date
+3. If miss: Agent solves problem, then documents via <code>/compound</code>
+4. Solution file created in <code>docs/solutions/{category}/</code>
+5. Future agents discover the solution via search</p>
+<p><strong>Compounding Metrics:</strong>
+- <strong>Hit Rate:</strong> <code>(Solutions reused / Total problems) × 100%</code>
+- <strong>Zombie Rate:</strong> Solutions not referenced in &gt;90 days
+- <strong>Coverage:</strong> Percentage of common problem types documented</p>
+<hr />
+<h3 id="62-the-workflow-engine">6.2 The Workflow Engine</h3>
+<p><strong>Purpose:</strong> Enforce systematic engineering processes.</p>
+<p><strong>Mechanism: State Machine Orchestration</strong></p>
+<pre class="mermaid"><code>stateDiagram-v2
+    [*] --&gt; Research: Complex problem
+    Research --&gt; Planning: /explore complete
+    Planning --&gt; Approval: /plan or /specs
+    Approval --&gt; Execution: User approves
+    Execution --&gt; Verification: /work complete
+    Verification --&gt; Knowledge: /review complete
+    Knowledge --&gt; [*]: /compound + /housekeeping
+
+    Verification --&gt; Execution: Issues found
+    Planning --&gt; Research: Gaps identified</code></pre>
+<p><strong>Workflow Types:</strong></p>
+<table>
+<thead>
+<tr>
+<th>Workflow</th>
+<th>Trigger</th>
+<th>Output Artifact</th>
+<th>Enforces</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>/explore</code></td>
+<td>"I need to understand..."</td>
+<td><code>docs/explorations/*.md</code></td>
+<td>Multi-order thinking</td>
+</tr>
+<tr>
+<td><code>/specs</code></td>
+<td>Multi-week initiatives</td>
+<td><code>docs/specs/{name}/</code></td>
+<td>Phased execution</td>
+</tr>
+<tr>
+<td><code>/plan</code></td>
+<td>Before significant work</td>
+<td><code>plans/*.md</code></td>
+<td>Planning rigor</td>
+</tr>
+<tr>
+<td><code>/work</code></td>
+<td>"Proceed", "LGTM"</td>
+<td>Code changes + tests</td>
+<td>Test-driven execution</td>
+</tr>
+<tr>
+<td><code>/review</code></td>
+<td>Before merge</td>
+<td>Findings + todos</td>
+<td>Multi-perspective review</td>
+</tr>
+<tr>
+<td><code>/compound</code></td>
+<td>"That worked!"</td>
+<td><code>docs/solutions/*.md</code></td>
+<td>Knowledge capture</td>
+</tr>
+<tr>
+<td><code>/housekeeping</code></td>
+<td>Before <code>git push</code></td>
+<td>Clean repo state</td>
+<td>Archive completed work</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Implicit Triggers (Pattern #14):</strong>
+The system recognizes natural language phrases and auto-triggers workflows:
+- "Let me investigate..." → <code>/explore</code>
+- "Go ahead" → <code>/work</code>
+- "Ship it" → <code>/review</code> + <code>/compound</code></p>
+<p><strong>Enforcement Mechanisms:</strong>
+1. <strong>Git Hooks:</strong> <code>pre-push-housekeeping.sh</code> blocks push if todos/plans not archived
+2. <strong>Workflow Protocol:</strong> Each workflow calls <code>log-workflow.sh</code>, building usage telemetry
+3. <strong>Skill Dependencies:</strong> Workflows explicitly call skills (e.g., <code>/review</code> → <code>code-review</code> skill)</p>
+<hr />
+<h3 id="63-the-immune-system-pattern-enforcement">6.3 The Immune System (Pattern Enforcement)</h3>
+<p><strong>Purpose:</strong> Prevent recurring mistakes through codified patterns.</p>
+<p><strong>Mechanism: Multi-Layer Defense</strong></p>
+<pre class="mermaid"><code>graph TD
+    Problem[Recurring Problem] --&gt; Recognize{Agent Recognizes?}
+    Recognize --&gt;|Yes| Pattern[Apply Pattern]
+    Recognize --&gt;|No| Mistake[Make Mistake]
+    Mistake --&gt; Review[/review detects]
+    Review --&gt; Document["/compound documents"]
+    Document --&gt; Promote{Recurring?}
+    Promote --&gt;|Yes| Critical["Add to critical-patterns.md"]
+    Promote --&gt;|No| Solution["Store in docs/solutions/"]
+    Critical --&gt; Enforce[Validation Script]
+    Solution --&gt; Search["Future compound-search"]
+
+    Pattern --&gt; Validate[Validation Script]
+    Validate --&gt;|Pass| Ship[Ship Code]
+    Validate --&gt;|Fail| Block[Block Push]</code></pre>
+<p><strong>Pattern Layers:</strong></p>
+<table>
+<thead>
+<tr>
+<th>Layer</th>
+<th>Mechanism</th>
+<th>Example</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Level 1: Documentation</strong></td>
+<td><code>critical-patterns.md</code></td>
+<td>Pattern #10: Use scripts, not manual edits</td>
+</tr>
+<tr>
+<td><strong>Level 2: Workflow Integration</strong></td>
+<td>Checklists in workflows</td>
+<td><code>/work</code> Step 3.5: "Run <code>/doc</code>"</td>
+</tr>
+<tr>
+<td><strong>Level 3: Validation Scripts</strong></td>
+<td>Automated checks</td>
+<td><code>validate-compound.sh</code> checks YAML schema</td>
+</tr>
+<tr>
+<td><strong>Level 4: Git Hooks</strong></td>
+<td>Pre-push enforcement</td>
+<td><code>pre-push-housekeeping.sh</code> blocks stale docs</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Pattern Lifecycle:</strong>
+1. <strong>Problem occurs</strong> → Solved and documented in <code>/compound</code>
+2. <strong>Problem recurs</strong> → Recognized during <code>/review</code>
+3. <strong>Promotion trigger</strong> → Run <code>/promote_pattern</code>
+4. <strong>Critical pattern added</strong> → Updated in <code>critical-patterns.md</code>
+5. <strong>Validation script created</strong> → Automated enforcement
+6. <strong>Git hook integrated</strong> → Impossible to violate</p>
+<p><strong>Current Pattern Count:</strong> 23 critical patterns (see Section 4)</p>
+<hr />
+<h3 id="64-the-nervous-system-metrics-feedback">6.4 The Nervous System (Metrics &amp; Feedback)</h3>
+<p><strong>Purpose:</strong> Provide real-time visibility into system health.</p>
+<p><strong>Mechanism: Instrumentation + Aggregation + Visualization</strong></p>
+<pre class="mermaid"><code>graph LR
+    subgraph "Data Collection"
+        W[Workflows] --&gt;|log-workflow.sh| WL[workflow_usage.log]
+        S[Skills] --&gt;|log-skill.sh| SL[skill_usage.log]
+        E[Events] --&gt;|log-event.sh| EL[compound_usage.log]
+    end
+
+    subgraph "Aggregation"
+        WL --&gt; Metrics[compound-metrics.sh]
+        SL --&gt; Metrics
+        EL --&gt; Metrics
+        Metrics --&gt; History[compound_history.json]
+    end
+
+    subgraph "Visualization"
+        History --&gt; Dashboard[compound-dashboard.sh]
+        Dashboard --&gt; Grade[Health Grade A-F]
+        Dashboard --&gt; Recommendations[Actionable Recommendations]
+    end
+
+    Agent([Agent]) --&gt;|Daily| Dashboard
+    Dashboard -.-&gt;|Feedback Loop| Agent</code></pre>
+<p><strong>Telemetry Files:</strong></p>
+<table>
+<thead>
+<tr>
+<th>File</th>
+<th>Writer</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>.agent/logs/workflow_usage.log</code></td>
+<td><code>log-workflow.sh</code></td>
+<td>Tracks every <code>/workflow</code> invocation</td>
+</tr>
+<tr>
+<td><code>.agent/logs/skill_usage.log</code></td>
+<td><code>log-skill.sh</code></td>
+<td>Tracks skill usage by context</td>
+</tr>
+<tr>
+<td><code>.agent/logs/compound_usage.log</code></td>
+<td>Various</td>
+<td>General system events</td>
+</tr>
+<tr>
+<td><code>.agent/metrics/compound_history.json</code></td>
+<td><code>compound-metrics.sh</code></td>
+<td>Daily health snapshots</td>
+</tr>
+<tr>
+<td><code>.agent/metrics/unused_workflows.txt</code></td>
+<td><code>compound-dashboard.sh</code></td>
+<td>Identifies stale workflows</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Health Dashboard Metrics:</strong></p>
+<table>
+<thead>
+<tr>
+<th>Metric</th>
+<th>Formula</th>
+<th>Target</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Solution Count</strong></td>
+<td>Files in <code>docs/solutions/</code></td>
+<td>Growing</td>
+</tr>
+<tr>
+<td><strong>Hit Rate</strong></td>
+<td>Solutions with <code>last_referenced</code> &lt; 90 days</td>
+<td>&gt;50%</td>
+</tr>
+<tr>
+<td><strong>Zombie Rate</strong></td>
+<td>Solutions not referenced in &gt;90 days</td>
+<td>&lt;20%</td>
+</tr>
+<tr>
+<td><strong>Todo Debt</strong></td>
+<td>Pending todos in <code>todos/</code></td>
+<td>&lt;10 P1 items</td>
+</tr>
+<tr>
+<td><strong>Drift</strong></td>
+<td>Stale specs/plans</td>
+<td>0</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Feedback Loops:</strong>
+1. <strong>Daily Health Check</strong> → Agent runs <code>compound-dashboard.sh</code> at session start
+2. <strong>Warnings displayed</strong> → Agent addresses recommendations (e.g., "Link orphaned solutions")
+3. <strong>Metrics improve</strong> → Health grade increases (F → D → C → B → A)
+4. <strong>Continuous improvement</strong> → System learns from its own usage patterns</p>
+<p><strong>Observability by Default (Pattern #13):</strong>
+Every new skill MUST include instrumentation calling <code>log-skill.sh</code> to participate in the feedback loop.</p>
+<hr />
+<h2 id="7-component-map">7. Component Map</h2>
+<pre class="mermaid"><code>graph TD
+    User([User]) --&gt; |"Start Session"| Resume[session-resume]
+    Resume --&gt; Dashboard[compound-dashboard]
+
+    subgraph "Core Workflow Loop"
+        Explore[/explore] --&gt; Plan[/plan]
+        Plan --&gt; Work[/work]
+        Work --&gt; Review[/review]
+        Review --&gt; Compound[/compound]
+        Compound --&gt; Housekeeping[/housekeeping]
+    end
+
+    subgraph "Knowledge Base"
+        Solutions[(docs/solutions)]
+        Patterns[(critical-patterns)]
+        Architecture[(This Document)]
+    end
+
+    subgraph "Automation"
+        Metrics[compound-metrics]
+        Validation[validate-architecture]
+        Search[compound-search]
+    end
+
+    User --&gt; Explore
+    Work --&gt; |"Uses"| Search
+    Search --&gt; |"Reads"| Solutions
+    Validation --&gt; |"Verifies"| Architecture
+    Housekeeping --&gt; |"Runs"| Validation
+    Compound --&gt; |"Writes"| Solutions</code></pre>
+<hr />
+<h2 id="8-metrics-health">8. Metrics &amp; Health</h2>
+<p>The system monitors its own health via <code>scripts/compound-metrics.sh</code>, tracking:
+- <strong>Solution Hit Rate:</strong> How often we reuse knowledge.
+- <strong>Todo Quality:</strong> Completeness of task definitions.
+- <strong>Drift:</strong> Stale plans or specifications.
+- <strong>Zombies:</strong> Solutions not referenced in &gt;90 days.</p>
+<p>Current status is viewable via <code>./scripts/compound-dashboard.sh</code>.</p>
+<hr />
+<h2 id="9-observability-feedback">9. Observability &amp; Feedback</h2>
+<p>The "Nervous System" tracking autonomous behavior.</p>
+<h3 id="telemetry-logs-agentlogs">Telemetry Logs (<code>.agent/logs/</code>)</h3>
+<table>
+<thead>
+<tr>
+<th>File</th>
+<th>Purpose</th>
+<th>Writer source</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>workflow_usage.log</code></td>
+<td>Tracks every workflow invocation</td>
+<td><code>log-workflow.sh</code></td>
+</tr>
+<tr>
+<td><code>skill_usage.log</code></td>
+<td>Tracks every skill invocation</td>
+<td><code>log-skill.sh</code></td>
+</tr>
+<tr>
+<td><code>compound_usage.log</code></td>
+<td>General system events</td>
+<td>Various scripts</td>
+</tr>
+<tr>
+<td><code>skill_suggestions.csv</code></td>
+<td>Potential new skills discovered</td>
+<td><code>suggest-skills.sh</code></td>
+</tr>
+</tbody>
+</table>
+<h3 id="aggregated-metrics-agentmetrics">Aggregated Metrics (<code>.agent/metrics/</code>)</h3>
+<table>
+<thead>
+<tr>
+<th>File</th>
+<th>Purpose</th>
+<th>Writer source</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>compound_history.json</code></td>
+<td>Daily health snapshots</td>
+<td><code>compound-metrics.sh</code></td>
+</tr>
+<tr>
+<td><code>unused_workflows.txt</code></td>
+<td>Rarely-used workflows</td>
+<td><code>compound-dashboard.sh</code></td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="10-directory-structure">10. Directory Structure</h2>
+<p>The physical layout of the Compound System.</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>.agent/
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>├── logs/             # Telemetry data
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>├── metrics/          # Aggregated health data
+<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>└── workflows/        # Executable workflow definitions (*.md)
+<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>
+<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>docs/
+<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>├── architecture/     # System-level documentation (You are here)
+<a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>├── decisions/        # Architecture Decision Records (ADRs)
+<a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a>├── explorations/     # Deep dive research artifacts
+<a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a>├── features/         # Feature documentation
+<a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a>├── solutions/        # The Knowledge Base
+<a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a>│   ├── patterns/     # Critical Patterns
+<a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a>│   ├── templates/    # Artifact templates
+<a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a>│   └── {category}/   # Problem-solution pairs
+<a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a>└── specs/            # Multi-session specifications
+<a id="__codelineno-0-16" name="__codelineno-0-16" href="#__codelineno-0-16"></a>
+<a id="__codelineno-0-17" name="__codelineno-0-17" href="#__codelineno-0-17"></a>plans/                # Implementation plans from /plan
+<a id="__codelineno-0-18" name="__codelineno-0-18" href="#__codelineno-0-18"></a>todos/                # Work items from /review
+<a id="__codelineno-0-19" name="__codelineno-0-19" href="#__codelineno-0-19"></a>scripts/              # Automation tools
+<a id="__codelineno-0-20" name="__codelineno-0-20" href="#__codelineno-0-20"></a>skills/               # Modular agent capabilities
+</code></pre></div>
+<hr />
+<h2 id="11-lifecycle-artifacts">11. Lifecycle Artifacts</h2>
+<p>The system produces specific artifacts at each stage of the engineering lifecycle.</p>
+<table>
+<thead>
+<tr>
+<th>Stage</th>
+<th>Artifact</th>
+<th>Directory</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Research</strong></td>
+<td>Exploration Doc</td>
+<td><code>docs/explorations/</code></td>
+</tr>
+<tr>
+<td><strong>Strategy</strong></td>
+<td>Specification</td>
+<td><code>docs/specs/</code></td>
+</tr>
+<tr>
+<td><strong>Planning</strong></td>
+<td>Implementation Plan</td>
+<td><code>plans/</code></td>
+</tr>
+<tr>
+<td><strong>Decision</strong></td>
+<td>ADR</td>
+<td><code>docs/decisions/</code></td>
+</tr>
+<tr>
+<td><strong>Execution</strong></td>
+<td>Todo File</td>
+<td><code>todos/</code></td>
+</tr>
+<tr>
+<td><strong>Knowledge</strong></td>
+<td>Solution Doc</td>
+<td><code>docs/solutions/</code></td>
+</tr>
+<tr>
+<td><strong>Feature</strong></td>
+<td>Feature Doc</td>
+<td><code>docs/features/</code></td>
+</tr>
+</tbody>
+</table>
+
+
+
+
+
+
+
+  
+  
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.tabs", "navigation.sections", "navigation.expand", "search.suggest", "search.highlight"], "search": "../../assets/javascripts/workers/search.7a47a382.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.e71a0d61.min.js"></script>
+      
+    
+  </body>
+</html>
