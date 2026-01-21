@@ -15,6 +15,7 @@ const navItems = [
     { name: 'Assets', path: '/assets', icon: Layers }, // Placeholder
     { name: 'Data', path: '/data', icon: Database }, // Placeholder
     { name: 'Settings', path: '/settings', icon: Settings }, // Placeholder
+    { name: 'Documentation', path: 'https://TrendpilotAI.github.io/NarrativeReactor/', icon: BookOpen },
 ];
 
 export default function Sidebar() {

@@ -6,7 +6,10 @@
   "scripts": {
     "build": "tsc",
     "start": "node dist/index.js",
-    "dev": "genkit start -- npx tsx --watch src/index.ts"
+    "dev": "genkit start -- npx tsx --watch src/index.ts",
+    "docs:serve": "mkdocs serve",
+    "docs:build": "mkdocs build",
+    "docs:deploy": "mkdocs gh-deploy --force"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.33.0",
