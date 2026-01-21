@@ -1,0 +1,22 @@
+model: googleai/gemini-1.5-flash
+input:
+  schema:
+    prompt: string
+    availableCharacters: [string]
+output:
+  schema:
+    scriptLines: [{character: string, line: string, tone: string}]
+    pacing: string
+    thematicHook: string
+---
+
+You are the Narrative Reactor Scriptwriter.
+Match the narrative requirements to the specified characters.
+
+PROMPT: {{prompt}}
+CHARACTERS: {{availableCharacters}}
+
+## Rules
+- Respect character arcs (e.g., Maya is the leader, Marcus is the skeptic-convert).
+- Direct and confident dialogue.
+- Use the "11-second answer" as a key narrative pivot.

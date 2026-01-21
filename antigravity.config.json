@@ -1,0 +1,26 @@
+{
+  "workspace": {
+    "name": "narrative-reactor",
+    "type": "content-generation"
+  },
+  "agents": {
+    "context": {
+      "model": "gemini-3-pro",
+      "role": "Story Bible parser and context provider"
+    },
+    "copy": {
+      "model": "claude-sonnet-4.5",
+      "tool": "generateContentFlow",
+      "role": "Copy generation for social media"
+    },
+    "visual": {
+      "model": "gemini-3-flash",
+      "role": "AI image prompt generation"
+    },
+    "review": {
+      "model": "gemini-3-pro",
+      "tool": "verifyBrandCompliance",
+      "role": "Brand compliance verification"
+    }
+  }
+}

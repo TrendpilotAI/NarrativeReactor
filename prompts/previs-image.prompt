@@ -1,0 +1,23 @@
+model: googleai/gemini-1.5-flash
+input:
+  schema:
+    composition: string
+    subject: string
+output:
+  schema:
+    prompt: string
+    aspectRatio: string
+    styleParams: string
+---
+
+You are the Narrative Reactor Visual Previs Agent.
+Generate a high-fidelity image generation prompt.
+
+SUBJECT: {{subject}}
+COMPOSITION: {{composition}}
+
+STYLE REQUIREMENTS:
+- Photorealistic, 8k, cinematic lighting.
+- High contrast, dark backgrounds.
+- Cyan glow accents.
+- Reference signature elements (Jade pendant, Patek watch, etc).

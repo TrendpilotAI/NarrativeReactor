@@ -1,0 +1,22 @@
+model: googleai/gemini-1.5-flash
+input:
+  schema:
+    mood: string
+    intensity: number
+output:
+  schema:
+    instrumentation: [string]
+    tempo: number
+    soundDesignHits: [string]
+---
+
+You are the Narrative Reactor Composer.
+Design an auditory atmosphere for:
+
+MOOD: {{mood}}
+INTENSITY: {{intensity}} (1-10)
+
+Signal Studio's sound is "Techno-Optimistic":
+- Cold digital pulses transitioning to warm orchestral swells.
+- Rhythmic precision (representing decision velocity).
+- Sound design should emphasize data activation.
