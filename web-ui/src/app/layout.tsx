@@ -1,3 +1,4 @@
+import type { Metadata } from 'next';
 import Sidebar from '@/components/Sidebar';
 import AgentChat from '@/components/AgentChat';
 import { Inter } from 'next/font/google';

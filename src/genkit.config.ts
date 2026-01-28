@@ -8,5 +8,5 @@ export const ai = genkit({
         googleAI(),
         vertexAI({ location: 'us-central1' }),
     ],
-    model: 'googleai/gemini-1.5-flash', // Higher quota than 2.0-flash experimental
+    model: 'googleai/gemini-3-flash-preview',
 });

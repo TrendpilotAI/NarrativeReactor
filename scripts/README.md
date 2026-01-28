@@ -63,4 +63,9 @@ Most scripts are designed to be run via the agent workflows (e.g. `/work`, `/hou
 
 - **2025-12-27**: Added git worktree automation scripts.
 - **2025-12-23**: Initial transfer from InvestOS compound system.
+- **`test-fal-registry.ts`**: Verifies FalModelRegistry and pricing API.
+- **`test-video-flow.ts`**: Tests the full video generation agent flow.
+- **`test-generate-content.ts`**: Tests content generation logic.
+- **`generate-changelog.js`**: Generates project changelogs.
+
 ```

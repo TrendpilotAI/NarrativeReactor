@@ -11,5 +11,5 @@ exports.ai = (0, genkit_1.genkit)({
         (0, vertexai_1.vertexAI)({ location: 'us-central1' }),
         (0, firebase_1.firebase)(),
     ],
-    model: 'googleai/gemini-2.0-flash', // Use string ID
+    model: 'googleai/gemini-3-flash-preview',
 });

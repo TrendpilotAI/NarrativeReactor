@@ -4,6 +4,8 @@ import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Send, Bot, User, X, Edit3, Maximize2, Minimize2, Sparkles, Settings } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Badge } from '@/components/ui/badge';
@@ -65,7 +67,7 @@ export default function AgentChat() {
                 activeModule: pathname.split('/').pop() || 'Dashboard'
             };
 
-            const response = await fetch('http://localhost:3400/agenticChat', {
+            const response = await fetch('/api/agenticChat', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -136,15 +138,53 @@ export default function AgentChat() {
                         </div>
 
                         {/* Chat Body */}
-                        <ScrollArea className="flex-1 p-4" viewportRef={scrollRef}>
-                            <div className="space-y-4">
+                        <ScrollArea className="flex-1 p-4">
+                            <div className="space-y-4" ref={scrollRef}>
                                 {messages.map(msg => (
                                     <div key={msg.id} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-                                        <div className={`max-w-[85%] p-3 rounded-2xl text-sm ${msg.role === 'user'
-                                                ? 'bg-cyan-600 text-white rounded-tr-none'
-                                                : 'bg-slate-900 border border-border text-gray-200 rounded-tl-none'
+                                        <div className={`max-w-[85%] p-3 rounded-2xl text-sm overflow-hidden ${msg.role === 'user'
+                                            ? 'bg-cyan-600 text-white rounded-tr-none'
+                                            : 'bg-slate-900 border border-border text-gray-200 rounded-tl-none'
                                             }`}>
-                                            {msg.content}
+                                            <div className={`prose prose-sm max-w-none ${msg.role === 'user' ? 'prose-invert text-white' : 'prose-invert text-gray-200 text-left'}`}>
+                                                <ReactMarkdown
+                                                    remarkPlugins={[remarkGfm]}
+                                                    components={{
+                                                        a: ({ ...props }) => {
+                                                            const href = props.href as string || '';
+                                                            const isVideo = href.match(/\.(mp4|webm|ogg)$/i) || href.includes('_video.mp4');
+                                                            if (isVideo) {
+                                                                return (
+                                                                    <div className="mt-2 rounded-lg overflow-hidden border border-border/50 bg-black/50">
+                                                                        <video
+                                                                            src={href}
+                                                                            controls
+                                                                            className="w-full max-h-[300px]"
+                                                                            preload="metadata"
+                                                                        />
+                                                                        <div className="p-2 text-xs text-muted-foreground flex justify-between items-center bg-black/40">
+                                                                            <span className="truncate max-w-[200px]">{props.children as React.ReactNode}</span>
+                                                                            <a href={href} target="_blank" rel="noopener noreferrer" className="text-cyan-400 hover:underline ml-2 flex-shrink-0">
+                                                                                Download
+                                                                            </a>
+                                                                        </div>
+                                                                    </div>
+                                                                );
+                                                            }
+                                                            return <a {...props} target="_blank" rel="noopener noreferrer" className="text-cyan-400 hover:underline break-all" />;
+                                                        },
+                                                        img: ({ ...props }) => (
+                                                            <div className="my-2 rounded-lg overflow-hidden border border-border/50">
+                                                                {/* eslint-disable-next-line @next/next/no-img-element */}
+                                                                <img {...props} className="w-full max-h-[300px] object-cover" alt={props.alt || 'Generated Image'} />
+                                                            </div>
+                                                        ),
+                                                        p: ({ ...props }) => <p {...props} className="mb-2 last:mb-0" />,
+                                                    }}
+                                                >
+                                                    {msg.content}
+                                                </ReactMarkdown>
+                                            </div>
                                         </div>
                                     </div>
                                 ))}

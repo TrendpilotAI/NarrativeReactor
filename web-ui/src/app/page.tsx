@@ -85,7 +85,12 @@ export default function Dashboard() {
               <div className="space-y-4">
                 {recentContent.map((item) => (
                   <div key={item.id} className="h-full">
-                    <ContentCard item={item} />
+                    <ContentCard
+                      item={item}
+                      onApprove={(id) => alert(`Approved item ${id}`)}
+                      onReject={(id) => alert(`Rejected item ${id}`)}
+                      onEdit={(id) => alert(`Edit item ${id}`)}
+                    />
                   </div>
                 ))}
               </div>
@@ -99,7 +104,7 @@ export default function Dashboard() {
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {recentContent.filter(i => i.status === 'pending_approval' || i.score < 80).map((item, i) => (
+              {recentContent.filter(i => i.status === 'pending_approval' || i.complianceScore < 80).map((item, i) => (
                 <div key={i} className="flex items-start space-x-3 p-3 rounded-md bg-slate-950/30 border border-border hover:bg-slate-900 hover:border-cyan-500/30 transition-all duration-200 cursor-pointer">
                   <div className="mt-1">
                     <AlertTriangle className="h-5 w-5 text-amber-500" />

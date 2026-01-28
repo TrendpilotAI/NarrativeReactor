@@ -152,19 +152,19 @@ export class XProvider implements SocialProvider {
         });
 
         const me = await client.v2.me();
-        const mentions = await client.v2.userMentions(me.data.id, {
+        const mentions = await client.v2.userMentionTimeline(me.data.id, {
             'tweet.fields': ['created_at', 'author_id'],
             expansions: ['author_id'],
             'user.fields': ['name', 'username', 'profile_image_url'],
             max_results: 10,
         });
 
-        const users = mentions.includes?.users?.reduce((acc: any, user) => {
+        const users = mentions.includes?.users?.reduce((acc: Record<string, { name: string; username: string; profile_image_url?: string }>, user: { id: string; name: string; username: string; profile_image_url?: string }) => {
             acc[user.id] = user;
             return acc;
-        }, {}) || {};
+        }, {} as Record<string, { name: string; username: string; profile_image_url?: string }>) || {};
 
-        return mentions.data.data?.map(tweet => ({
+        return mentions.data.data?.map((tweet: { id: string; text: string; created_at?: string; author_id?: string }) => ({
             id: tweet.id,
             text: tweet.text,
             createdAt: tweet.created_at,

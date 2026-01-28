@@ -7,7 +7,7 @@ export async function generateContentAction(
 ) {
     try {
         // Genkit Flow Server URL (Express)
-        const FLOW_SERVER = 'http://127.0.0.1:3400';
+        const FLOW_SERVER = 'http://127.0.0.1:3401';
 
         // The explicit flow name endpoint pattern with @genkit-ai/express
         const response = await fetch(`${FLOW_SERVER}/generateContent`, {
@@ -44,7 +44,7 @@ export async function generateContentAction(
     }
 }
 
-const FLOW_SERVER = 'http://127.0.0.1:3400';
+const FLOW_SERVER = 'http://127.0.0.1:3401';
 
 export async function getAuthUrlAction(provider: string) {
     const response = await fetch(`${FLOW_SERVER}/getAuthUrl`, {
@@ -70,7 +70,7 @@ export async function listIntegrationsAction() {
     const response = await fetch(`${FLOW_SERVER}/listIntegrations`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ data: {} }),
+        body: JSON.stringify({ data: undefined }),
     });
     const json = await response.json();
     return json.result;

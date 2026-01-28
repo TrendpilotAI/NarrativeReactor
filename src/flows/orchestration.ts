@@ -9,7 +9,8 @@ import {
     socialPostTool,
     socialPerformanceTool,
     listIntegrationsTool,
-    osintResearchTool
+    osintResearchTool,
+    videoGenTool
 } from '../lib/agents';
 
 /**
@@ -35,30 +36,45 @@ export const videoGenerationFlow = ai.defineFlow(
     async (input) => {
         // Parallel Orchestration: Trigger all specialized tools concurrently
         const [scene, narrative, score, previs] = await Promise.all([
-            ai.runTool(sceneGenerationTool, {
+            sceneGenerationTool({
                 storyContext: input.theme,
                 characters: input.characters,
                 location: 'Signal Studio Innovation Hub',
             }),
-            ai.runTool(narrativeAssemblyTool, {
+            narrativeAssemblyTool({
                 prompt: input.theme,
                 availableCharacters: input.characters,
             }),
-            ai.runTool(scoreGenTool, {
+            scoreGenTool({
                 mood: 'Techno-optimistic, cinematic',
                 intensity: 7,
             }),
-            ai.runTool(previsImageTool, {
+            previsImageTool({
                 composition: 'Low-angle hero shot',
                 subject: input.characters[0] || 'Maya Chen',
             }),
         ]);
+
+        // Sequential: Generate Video using the Scene description and Previs Image
+        let videoResult = null;
+        try {
+            const sceneDesc = typeof scene === 'string' ? scene : JSON.stringify(scene);
+            const imageUrl = previs?.imageUrl;
+
+            videoResult = await videoGenTool({
+                sceneDescription: sceneDesc.substring(0, 500), // Truncate for safety
+                imageUrl: imageUrl
+            });
+        } catch (e) {
+            console.error("Video generation failed:", e);
+        }
 
         return {
             scene,
             narrative,
             score,
             previs,
+            video: videoResult,
             orchestrationStatus: 'COMPLETE',
             timestamp: new Date().toISOString(),
         };
@@ -86,10 +102,10 @@ export const agenticChatFlow = ai.defineFlow(
     async (input) => {
         let performanceContext = "";
         try {
-            const integrations = await ai.runFlow(listIntegrationsFlow, {});
+            const integrations = await listIntegrationsFlow(undefined);
             const xIntegration = integrations.find((i: any) => i.provider === 'x' && i.connected);
             if (xIntegration) {
-                const perf = await ai.runFlow(getPerformanceDataFlow, { provider: 'x', days: 7 });
+                const perf = await getPerformanceDataFlow({ provider: 'x', days: 7 });
                 performanceContext = `\n\nCURRENT SOCIAL PERFORMANCE (X/Twitter - last 7 days):\n${perf.map((m: any) => `- ${m.label}: ${m.value} (${m.change})`).join('\n')}`;
             }
         } catch (e) {
@@ -119,7 +135,8 @@ export const agenticChatFlow = ai.defineFlow(
                 socialPostTool,
                 socialPerformanceTool,
                 listIntegrationsTool,
-                osintResearchTool
+                osintResearchTool,
+                videoGenTool
             ],
         });
 
@@ -130,9 +147,9 @@ export const agenticChatFlow = ai.defineFlow(
                 'Generate Pacing for Narrative',
                 'Design High-Intensity Score'
             ],
-            toolOutputs: result.toolResponses?.map(tr => ({
-                name: tr.name,
-                output: tr.output
+            toolOutputs: result.toolRequests?.map((tr) => ({
+                name: tr.toolRequest.name,
+                output: tr.toolRequest.input
             }))
         };
     }

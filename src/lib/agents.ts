@@ -1,6 +1,7 @@
 import { z } from 'genkit';
 import { ai } from '../genkit.config';
 import { providers, loadIntegrations } from './social-providers';
+import { generateImage, generateVideo } from './fal';
 
 /**
  * 1. Scene Generation Tool
@@ -73,13 +74,26 @@ export const previsImageTool = ai.defineTool(
         inputSchema: z.object({
             composition: z.string(),
             subject: z.string(),
+            modelId: z.string().optional().describe('Fal.ai model ID (default: hunyuan-image/v3)'),
         }),
         outputSchema: z.any(),
     },
     async (input) => {
-        const p = ai.prompt('previs-image');
-        const { output } = await p(input);
-        return output;
+        // Instead of just returning the prompt output, let's actually generate the image
+        const imagePrompt = `Cinematic shot, ${input.composition}, subject: ${input.subject}, high quality, photorealistic, 8k`;
+        try {
+            const result = await generateImage(imagePrompt, input.modelId);
+            return {
+                prompt: imagePrompt,
+                imageUrl: result.url,
+                modelId: result.modelId,
+                cost: result.cost,
+                duration: result.duration,
+                status: 'generated'
+            };
+        } catch (e: any) {
+            return { error: e.message };
+        }
     }
 );
 
@@ -198,6 +212,38 @@ export const osintResearchTool = ai.defineTool(
             };
         } catch (error: any) {
             return { error: `Failed to perform OSINT research: ${error.message}` };
+        }
+    }
+);
+
+/**
+ * 9. Video Generation Tool
+ * Generates video from scene description.
+ */
+export const videoGenTool = ai.defineTool(
+    {
+        name: 'videoGenTool',
+        description: 'Generates a video clip based on a scene description.',
+        inputSchema: z.object({
+            sceneDescription: z.string(),
+            imageUrl: z.string().optional().describe('Optional starting frame URL'),
+            modelId: z.string().optional().describe('Fal.ai model ID (default: seedance 1.5 pro)'),
+        }),
+        outputSchema: z.any(),
+    },
+    async (input) => {
+        try {
+            const result = await generateVideo(input.sceneDescription, input.imageUrl, input.modelId);
+            return {
+                prompt: input.sceneDescription,
+                videoUrl: result.url,
+                modelId: result.modelId,
+                cost: result.cost,
+                duration: result.duration,
+                status: 'generated'
+            };
+        } catch (e: any) {
+            return { error: e.message };
         }
     }
 );

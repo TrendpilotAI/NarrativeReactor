@@ -1,4 +1,3 @@
-import { gemini20Flash, googleAI } from '@genkit-ai/google-genai';
 import { generateContentFlow } from './flows/content-generation';
 import { verifyBrandCompliance } from './flows/compliance';
 import { videoGenerationFlow, agenticChatFlow } from './flows/orchestration';
@@ -19,7 +18,7 @@ startFlowServer({
         getPerformanceDataFlow,
         getMentionsFlow
     ],
-    port: 3400,
+    port: 3401,
     cors: {
         origin: '*',
     }

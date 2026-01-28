@@ -4,11 +4,13 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ComplianceScore } from "./compliance-score";
 import { Edit2, Send, RotateCcw, CheckCircle2 } from "lucide-react";
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 
 export type ContentType = 'twitter' | 'linkedin' | 'threads' | 'image-prompt';
 export type ContentStatus = 'draft' | 'pending_approval' | 'approved' | 'published' | 'rejected';
 
-interface ContentItem {
+export interface ContentItem {
     id: string;
     type: ContentType;
     title: string;
@@ -58,8 +60,37 @@ export function ContentCard({ item, onApprove, onReject, onEdit }: ContentCardPr
                 </Badge>
             </CardHeader>
             <CardContent className="flex-grow py-4">
-                <div className="text-sm text-muted-foreground font-mono whitespace-pre-wrap bg-black/20 p-4 rounded-md border border-border/50 min-h-[100px] shadow-inner">
-                    {item.content}
+                <div className="text-sm text-muted-foreground font-mono whitespace-pre-wrap bg-black/20 p-4 rounded-md border border-border/50 min-h-[100px] shadow-inner relative group/content">
+                    <div className="prose prose-sm prose-invert max-w-none">
+                        <ReactMarkdown
+                            remarkPlugins={[remarkGfm]}
+                            components={{
+                                p: ({ ...props }) => <p {...props} className="mb-2 last:mb-0" />,
+                                a: ({ ...props }) => <a {...props} className="text-cyan-400 hover:underline" target="_blank" rel="noopener noreferrer" />,
+                                img: ({ ...props }) => (
+                                    <div className="my-2 rounded-lg overflow-hidden border border-border/50">
+                                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                                        <img {...props} className="w-full max-h-[200px] object-cover" alt={props.alt || 'Content Image'} />
+                                    </div>
+                                ),
+                            }}
+                        >
+                            {item.content}
+                        </ReactMarkdown>
+                    </div>
+                    <Button
+                        variant="ghost"
+                        size="icon"
+                        className="absolute top-2 right-2 opacity-0 group-hover/content:opacity-100 transition-opacity bg-black/50 hover:bg-black/80"
+                        title="Copy content"
+                        onClick={() => {
+                            if (typeof navigator !== 'undefined') {
+                                navigator.clipboard.writeText(item.content);
+                            }
+                        }}
+                    >
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-copy"><rect width="14" height="14" x="8" y="8" rx="2" ry="2" /><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2" /></svg>
+                    </Button>
                 </div>
             </CardContent>
             <CardFooter className="flex flex-col space-y-3 pt-2 bg-black/10">

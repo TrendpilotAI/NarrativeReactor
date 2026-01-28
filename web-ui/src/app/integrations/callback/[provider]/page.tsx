@@ -1,5 +1,8 @@
 'use client';
 
+import { useState, useEffect } from 'react';
+import { useParams, useSearchParams, useRouter } from 'next/navigation';
+import { AlertCircle, RefreshCw } from 'lucide-react';
 import { connectSocialAccountAction } from "../../../actions";
 
 export default function IntegrationCallback() {
