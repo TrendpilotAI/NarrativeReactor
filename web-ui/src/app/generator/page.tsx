@@ -4,11 +4,11 @@ import { useState } from 'react';
 import { generateContentAction } from '../actions';
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Loader2, Copy, Save, AlertTriangle, CheckCircle } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { useModels, LLM_MODELS } from "@/contexts/ModelContext";
 
 export default function GeneratorPage() {
     const [isGenerating, setIsGenerating] = useState(false);
@@ -17,7 +17,7 @@ export default function GeneratorPage() {
 
     const [episode, setEpisode] = useState('3.1');
     const [platform, setPlatform] = useState('Twitter');
-    const [useClaude, setUseClaude] = useState(false);
+    const { llmModel, setLlmModel } = useModels();
 
     const handleGenerate = async () => {
         setIsGenerating(true);
@@ -25,6 +25,8 @@ export default function GeneratorPage() {
         setComplianceResult(null);
 
         try {
+            // useClaude is true for any Claude model
+            const useClaude = llmModel.provider === 'Anthropic';
             const result = await generateContentAction(episode, platform, useClaude);
             setGeneratedContent(result.content);
             setComplianceResult(result.compliance);
@@ -32,6 +34,12 @@ export default function GeneratorPage() {
             setGeneratedContent("System Error: Failed to generate content.");
         } finally {
             setIsGenerating(false);
+        }
+    };
+
+    const copyToClipboard = () => {
+        if (generatedContent) {
+            navigator.clipboard.writeText(generatedContent);
         }
     };
 
@@ -76,18 +84,26 @@ export default function GeneratorPage() {
                         </div>
                     </div>
 
-                    <div className="space-y-4 pt-4 border-t border-white/5">
-                        <div className="flex items-center space-x-2">
-                            <Checkbox
-                                id="claude"
-                                checked={useClaude}
-                                onCheckedChange={(c) => setUseClaude(!!c)}
-                                className="border-white/20 data-[state=checked]:bg-cyan-500 data-[state=checked]:border-cyan-500"
-                            />
-                            <Label htmlFor="claude" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 text-gray-300">
-                                Use Claude 3.5 Sonnet
-                            </Label>
-                        </div>
+                    <div className="space-y-2">
+                        <Label className="text-gray-400">AI Model</Label>
+                        <Select value={llmModel.id} onValueChange={(id) => {
+                            const model = LLM_MODELS.find(m => m.id === id);
+                            if (model) setLlmModel(model);
+                        }}>
+                            <SelectTrigger className="w-full bg-black/50 border-white/10 text-white">
+                                <SelectValue placeholder="Select Model" />
+                            </SelectTrigger>
+                            <SelectContent className="bg-slate-900 border-white/10 text-white">
+                                {LLM_MODELS.map((model) => (
+                                    <SelectItem key={model.id} value={model.id}>
+                                        <div className="flex items-center justify-between w-full">
+                                            <span>{model.name}</span>
+                                            <span className="text-xs text-slate-500 ml-2">{model.provider}</span>
+                                        </div>
+                                    </SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
                     </div>
 
                     <Button
@@ -154,9 +170,17 @@ export default function GeneratorPage() {
                                                     Issues Detected
                                                 </Badge>
                                             )}
+                                            <Badge variant="outline" className="border-cyan-500/50 text-cyan-400 bg-cyan-950/30 px-2 py-1 text-xs">
+                                                {llmModel.name}
+                                            </Badge>
                                         </div>
                                         <div className="flex space-x-2">
-                                            <Button variant="ghost" size="sm" className="text-gray-400 hover:text-white">
+                                            <Button
+                                                variant="ghost"
+                                                size="sm"
+                                                className="text-gray-400 hover:text-white"
+                                                onClick={copyToClipboard}
+                                            >
                                                 <Copy className="w-4 h-4 mr-2" /> Copy
                                             </Button>
                                             <Button variant="secondary" size="sm" className="bg-cyan-500/20 text-cyan-400 border border-cyan-500/30 hover:bg-cyan-500/30">

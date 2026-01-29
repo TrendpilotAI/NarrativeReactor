@@ -196,6 +196,74 @@ export async function loadIntegrations() {
     }
 }
 
+// Stub provider base class for platforms not yet fully implemented
+class StubProvider implements SocialProvider {
+    identifier: string;
+    name: string;
+
+    constructor(identifier: string, name: string) {
+        this.identifier = identifier;
+        this.name = name;
+    }
+
+    async generateAuthUrl(): Promise<{ url: string; codeVerifier: string; state: string }> {
+        // In a real implementation, this would generate OAuth URLs for each platform
+        // For now, return a placeholder indicating the platform needs configuration
+        throw new Error(`${this.name} OAuth not configured. Add ${this.identifier.toUpperCase()}_CLIENT_ID and ${this.identifier.toUpperCase()}_CLIENT_SECRET to your environment variables.`);
+    }
+
+    async authenticate(params: { code: string; codeVerifier: string }): Promise<AuthTokenDetails> {
+        throw new Error(`${this.name} authentication not implemented yet.`);
+    }
+
+    async post(accessToken: string, message: string): Promise<PostResponse> {
+        throw new Error(`${this.name} posting not implemented yet.`);
+    }
+
+    async getAnalytics(accessToken: string, days: number) {
+        return [
+            { label: 'Followers', value: 0, change: '+0%' },
+            { label: 'Engagement', value: 0, change: '+0%' },
+        ];
+    }
+
+    async getMentions(accessToken: string) {
+        return [];
+    }
+}
+
+// LinkedIn Provider (stub - requires LinkedIn Marketing API access)
+class LinkedInProvider extends StubProvider {
+    constructor() {
+        super('linkedin', 'LinkedIn');
+    }
+}
+
+// Instagram Provider (stub - requires Facebook Graph API access)
+class InstagramProvider extends StubProvider {
+    constructor() {
+        super('instagram', 'Instagram');
+    }
+}
+
+// Threads Provider (stub - requires Threads API access)
+class ThreadsProvider extends StubProvider {
+    constructor() {
+        super('threads', 'Threads');
+    }
+}
+
+// Facebook Provider (stub - requires Facebook Graph API access)
+class FacebookProvider extends StubProvider {
+    constructor() {
+        super('facebook', 'Facebook');
+    }
+}
+
 export const providers: Record<string, SocialProvider> = {
     x: new XProvider(),
+    linkedin: new LinkedInProvider(),
+    instagram: new InstagramProvider(),
+    threads: new ThreadsProvider(),
+    facebook: new FacebookProvider(),
 };

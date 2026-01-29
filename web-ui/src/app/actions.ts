@@ -95,3 +95,23 @@ export async function getMentionsAction(provider: string) {
     const json = await response.json();
     return json.result;
 }
+
+export async function listAssetsAction(type: 'image' | 'video' | 'all' = 'all') {
+    const response = await fetch(`${FLOW_SERVER}/listAssets`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ data: { type } }),
+    });
+    const json = await response.json();
+    return json.result;
+}
+
+export async function deleteAssetAction(id: string) {
+    const response = await fetch(`${FLOW_SERVER}/deleteAsset`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ data: { id } }),
+    });
+    const json = await response.json();
+    return json.result;
+}
