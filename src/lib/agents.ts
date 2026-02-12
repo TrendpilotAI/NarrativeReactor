@@ -217,6 +217,144 @@ export const osintResearchTool = ai.defineTool(
 );
 
 /**
+ * 9. OSINT Visual Search Tool
+ * Fetches real-world visual references (images) from open sources.
+ */
+export const osintVisualSearchTool = ai.defineTool(
+    {
+        name: 'osintVisualSearchTool',
+        description: 'Fetches real-world visual references and images from the web. Useful for design inspiration, architectural styles, and mood-boarding.',
+        inputSchema: z.object({
+            query: z.string().describe('The visual search query (e.g., "Singapore futuristic office interior")'),
+        }),
+        outputSchema: z.any(),
+    },
+    async (input) => {
+        const apiKey = process.env.SERPER_API_KEY;
+        if (!apiKey || apiKey === 'YOUR_SERPER_API_KEY') {
+            return { error: 'SERPER_API_KEY not configured.' };
+        }
+
+        try {
+            const response = await fetch('https://google.serper.dev/images', {
+                method: 'POST',
+                headers: {
+                    'X-API-KEY': apiKey,
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ q: input.query }),
+            });
+
+            const data = await response.json();
+            return {
+                query: input.query,
+                images: data.images?.slice(0, 10).map((img: any) => ({
+                    title: img.title,
+                    imageUrl: img.imageUrl,
+                    link: img.link,
+                    source: img.source
+                })) || []
+            };
+        } catch (error: any) {
+            return { error: `Failed to fetch visual references: ${error.message}` };
+        }
+    }
+);
+
+/**
+ * 10. OSINT Sentiment Tool
+ * Analyzes the "vibe" and community sentiment around a topic by searching discussion platforms.
+ */
+export const osintSentimentTool = ai.defineTool(
+    {
+        name: 'osintSentimentTool',
+        description: 'Analyzes community sentiment and "vibe" by searching forums and discussion sites like Reddit and Twitter.',
+        inputSchema: z.object({
+            topic: z.string().describe('The topic or trend to analyze (e.g., "remote work in Singapore tech")'),
+        }),
+        outputSchema: z.any(),
+    },
+    async (input) => {
+        const apiKey = process.env.SERPER_API_KEY;
+        if (!apiKey || apiKey === 'YOUR_SERPER_API_KEY') {
+            return { error: 'SERPER_API_KEY not configured.' };
+        }
+
+        try {
+            // Target discussion sites for sentiment gathering
+            const query = `${input.topic} sentiment site:reddit.com OR site:twitter.com OR site:news.ycombinator.com`;
+            const response = await fetch('https://google.serper.dev/search', {
+                method: 'POST',
+                headers: {
+                    'X-API-KEY': apiKey,
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ q: query }),
+            });
+
+            const data = await response.json();
+            return {
+                topic: input.topic,
+                discussions: data.organic?.map((r: any) => ({
+                    title: r.title,
+                    snippet: r.snippet,
+                    link: r.link
+                })) || [],
+                note: "Use the snippets to infer the collective 'vibe' and sentiment of the community."
+            };
+        } catch (error: any) {
+            return { error: `Failed to analyze sentiment: ${error.message}` };
+        }
+    }
+);
+
+/**
+ * 11. Dossier Enrichment Tool
+ * Automatically deepens character profiles with realistic, OSINT-inspired background data.
+ */
+export const dossierEnrichmentTool = ai.defineTool(
+    {
+        name: 'dossierEnrichmentTool',
+        description: 'Enriches character dossiers with realistic background intelligence (career paths, regional context, educational background).',
+        inputSchema: z.object({
+            characterName: z.string(),
+            location: z.string(),
+            occupation: z.string(),
+        }),
+        outputSchema: z.any(),
+    },
+    async (input) => {
+        const apiKey = process.env.SERPER_API_KEY;
+        if (!apiKey || apiKey === 'YOUR_SERPER_API_KEY') {
+            return { error: 'SERPER_API_KEY not configured.' };
+        }
+
+        try {
+            const query = `career path for ${input.occupation} in ${input.location} typical background education lifestyle`;
+            const response = await fetch('https://google.serper.dev/search', {
+                method: 'POST',
+                headers: {
+                    'X-API-KEY': apiKey,
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ q: query }),
+            });
+
+            const data = await response.json();
+            return {
+                character: input.characterName,
+                research: {
+                    careerInsights: data.organic?.slice(0, 5).map((r: any) => r.snippet),
+                    locationContext: `Insights on being a ${input.occupation} in ${input.location}.`
+                }
+            };
+        } catch (error: any) {
+            return { error: `Failed to enrich dossier: ${error.message}` };
+        }
+    }
+);
+
+/**
  * 9. Video Generation Tool
  * Generates video from scene description.
  */

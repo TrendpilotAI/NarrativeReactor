@@ -10,7 +10,10 @@ import {
     socialPerformanceTool,
     listIntegrationsTool,
     osintResearchTool,
-    videoGenTool
+    videoGenTool,
+    osintVisualSearchTool,
+    osintSentimentTool,
+    dossierEnrichmentTool
 } from '../lib/agents';
 
 /**
@@ -136,7 +139,10 @@ export const agenticChatFlow = ai.defineFlow(
                 socialPerformanceTool,
                 listIntegrationsTool,
                 osintResearchTool,
-                videoGenTool
+                videoGenTool,
+                osintVisualSearchTool,
+                osintSentimentTool,
+                dossierEnrichmentTool
             ],
         });
 
@@ -147,10 +153,12 @@ export const agenticChatFlow = ai.defineFlow(
                 'Generate Pacing for Narrative',
                 'Design High-Intensity Score'
             ],
-            toolOutputs: result.toolRequests?.map((tr) => ({
-                name: tr.toolRequest.name,
-                output: tr.toolRequest.input
-            }))
+            toolOutputs: result.message?.content
+                ?.filter(part => part.toolResponse)
+                .map(part => ({
+                    name: part.toolResponse?.name,
+                    output: part.toolResponse?.output
+                })) || []
         };
     }
 );

@@ -3,23 +3,28 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { motion } from 'framer-motion';
-import { LayoutDashboard, Zap, BookOpen, Layers, Settings, Database, Share2 } from 'lucide-react';
+import { LayoutDashboard, Zap, BookOpen, Layers, Settings, Database, Share2, ChevronDown, TrendingUp } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useModels, LLM_MODELS } from '@/contexts/ModelContext';
+import { useState } from 'react';
 
 const navItems = [
     { name: 'Dashboard', path: '/', icon: LayoutDashboard },
     { name: 'Generator', path: '/generator', icon: Zap },
+    { name: 'Research', path: '/research', icon: TrendingUp },
     { name: 'Story Bible', path: '/story-bible', icon: BookOpen },
     { name: 'Integrations', path: '/integrations', icon: Share2 },
-    { name: 'Performance', path: '/performance', icon: Zap },
-    { name: 'Assets', path: '/assets', icon: Layers }, // Placeholder
-    { name: 'Data', path: '/data', icon: Database }, // Placeholder
-    { name: 'Settings', path: '/settings', icon: Settings }, // Placeholder
+    { name: 'Performance', path: '/performance', icon: TrendingUp },
+    { name: 'Assets', path: '/assets', icon: Layers },
+    { name: 'Data', path: '/data', icon: Database },
+    { name: 'Settings', path: '/settings', icon: Settings },
     { name: 'Documentation', path: 'https://TrendpilotAI.github.io/NarrativeReactor/', icon: BookOpen },
 ];
 
 export default function Sidebar() {
     const pathname = usePathname();
+    const { llmModel, setLlmModel } = useModels();
+    const [isModelDropdownOpen, setIsModelDropdownOpen] = useState(false);
 
     return (
         <div className="w-64 h-full glass-panel border-r border-white/5 flex flex-col">
@@ -62,14 +67,56 @@ export default function Sidebar() {
                 })}
             </nav>
 
+            {/* Model Selector Dropdown */}
             <div className="p-4">
-                <div className="p-4 rounded-xl bg-gradient-to-b from-cyan-900/20 to-transparent border border-cyan-500/20">
-                    <div className="text-xs text-cyan-400 font-medium mb-1">CURRENT MODEL</div>
+                <div
+                    className="p-4 rounded-xl bg-gradient-to-b from-cyan-900/20 to-transparent border border-cyan-500/20 cursor-pointer hover:border-cyan-500/40 transition-all"
+                    onClick={() => setIsModelDropdownOpen(!isModelDropdownOpen)}
+                >
+                    <div className="text-xs text-cyan-400 font-medium mb-1 flex items-center justify-between">
+                        CURRENT MODEL
+                        <ChevronDown className={cn("w-4 h-4 transition-transform", isModelDropdownOpen && "rotate-180")} />
+                    </div>
                     <div className="text-sm text-white font-bold flex items-center justify-between">
-                        Gemini 1.5 Flash
+                        {llmModel.name}
                         <div className="w-2 h-2 bg-cyan-500 rounded-full" />
                     </div>
+                    <div className="text-[10px] text-slate-500 mt-1">{llmModel.provider}</div>
                 </div>
+
+                {/* Dropdown Menu */}
+                {isModelDropdownOpen && (
+                    <motion.div
+                        initial={{ opacity: 0, y: -10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="mt-2 bg-slate-900 border border-white/10 rounded-lg overflow-hidden shadow-lg"
+                    >
+                        {LLM_MODELS.map((model) => (
+                            <div
+                                key={model.id}
+                                className={cn(
+                                    "px-4 py-3 cursor-pointer transition-colors flex items-center justify-between",
+                                    model.id === llmModel.id
+                                        ? "bg-cyan-500/20 text-cyan-400"
+                                        : "hover:bg-white/5 text-gray-300"
+                                )}
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    setLlmModel(model);
+                                    setIsModelDropdownOpen(false);
+                                }}
+                            >
+                                <div>
+                                    <div className="text-sm font-medium">{model.name}</div>
+                                    <div className="text-[10px] text-slate-500">{model.provider}</div>
+                                </div>
+                                {model.id === llmModel.id && (
+                                    <div className="w-2 h-2 bg-cyan-500 rounded-full" />
+                                )}
+                            </div>
+                        ))}
+                    </motion.div>
+                )}
             </div>
         </div>
     );

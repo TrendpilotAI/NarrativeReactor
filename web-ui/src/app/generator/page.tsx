@@ -1,14 +1,14 @@
 'use client';
 
 import { useState } from 'react';
-import { generateContentAction } from '../actions';
+import { generateContentAction, generateSceneAction, generatePrevisImageAction, generateVideoAction } from '../actions';
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, Copy, Save, AlertTriangle, CheckCircle } from "lucide-react";
+import { Loader2, Copy, Save, AlertTriangle, CheckCircle, Clapperboard, Image, Video, Sparkles } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { useModels, LLM_MODELS } from "@/contexts/ModelContext";
 
 export default function GeneratorPage() {
     const [isGenerating, setIsGenerating] = useState(false);
@@ -17,7 +17,11 @@ export default function GeneratorPage() {
 
     const [episode, setEpisode] = useState('3.1');
     const [platform, setPlatform] = useState('Twitter');
-    const [useClaude, setUseClaude] = useState(false);
+    const { llmModel, setLlmModel } = useModels();
+
+    // Quick Actions state
+    const [quickActionLoading, setQuickActionLoading] = useState<string | null>(null);
+    const [quickActionResult, setQuickActionResult] = useState<{ type: string; data: unknown } | null>(null);
 
     const handleGenerate = async () => {
         setIsGenerating(true);
@@ -25,6 +29,8 @@ export default function GeneratorPage() {
         setComplianceResult(null);
 
         try {
+            // useClaude is true for any Claude model
+            const useClaude = llmModel.provider === 'Anthropic';
             const result = await generateContentAction(episode, platform, useClaude);
             setGeneratedContent(result.content);
             setComplianceResult(result.compliance);
@@ -32,6 +38,61 @@ export default function GeneratorPage() {
             setGeneratedContent("System Error: Failed to generate content.");
         } finally {
             setIsGenerating(false);
+        }
+    };
+
+    const copyToClipboard = () => {
+        if (generatedContent) {
+            navigator.clipboard.writeText(generatedContent);
+        }
+    };
+
+    // Quick Action Handlers
+    const handleGenerateScene = async () => {
+        setQuickActionLoading('scene');
+        setQuickActionResult(null);
+        try {
+            const result = await generateSceneAction(
+                `Episode ${episode} scene for ${platform}`,
+                ['Maya Chen', 'Marcus Thompson'],
+                'Signal Studio Innovation Hub'
+            );
+            setQuickActionResult({ type: 'scene', data: result });
+        } catch (e) {
+            setQuickActionResult({ type: 'error', data: 'Failed to generate scene.' });
+        } finally {
+            setQuickActionLoading(null);
+        }
+    };
+
+    const handleGenerateImage = async () => {
+        setQuickActionLoading('image');
+        setQuickActionResult(null);
+        try {
+            const result = await generatePrevisImageAction(
+                'Cinematic wide shot',
+                'Maya Chen presenting AI dashboard'
+            );
+            setQuickActionResult({ type: 'image', data: result });
+        } catch (e) {
+            setQuickActionResult({ type: 'error', data: 'Failed to generate image.' });
+        } finally {
+            setQuickActionLoading(null);
+        }
+    };
+
+    const handleGenerateVideo = async () => {
+        setQuickActionLoading('video');
+        setQuickActionResult(null);
+        try {
+            const result = await generateVideoAction(
+                'Signal Studio office, Maya Chen walks through glass doors, camera follows, morning light streaming in, cinematic'
+            );
+            setQuickActionResult({ type: 'video', data: result });
+        } catch (e) {
+            setQuickActionResult({ type: 'error', data: 'Failed to generate video.' });
+        } finally {
+            setQuickActionLoading(null);
         }
     };
 
@@ -76,18 +137,26 @@ export default function GeneratorPage() {
                         </div>
                     </div>
 
-                    <div className="space-y-4 pt-4 border-t border-white/5">
-                        <div className="flex items-center space-x-2">
-                            <Checkbox
-                                id="claude"
-                                checked={useClaude}
-                                onCheckedChange={(c) => setUseClaude(!!c)}
-                                className="border-white/20 data-[state=checked]:bg-cyan-500 data-[state=checked]:border-cyan-500"
-                            />
-                            <Label htmlFor="claude" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 text-gray-300">
-                                Use Claude 3.5 Sonnet
-                            </Label>
-                        </div>
+                    <div className="space-y-2">
+                        <Label className="text-gray-400">AI Model</Label>
+                        <Select value={llmModel.id} onValueChange={(id) => {
+                            const model = LLM_MODELS.find(m => m.id === id);
+                            if (model) setLlmModel(model);
+                        }}>
+                            <SelectTrigger className="w-full bg-black/50 border-white/10 text-white">
+                                <SelectValue placeholder="Select Model" />
+                            </SelectTrigger>
+                            <SelectContent className="bg-slate-900 border-white/10 text-white">
+                                {LLM_MODELS.map((model) => (
+                                    <SelectItem key={model.id} value={model.id}>
+                                        <div className="flex items-center justify-between w-full">
+                                            <span>{model.name}</span>
+                                            <span className="text-xs text-slate-500 ml-2">{model.provider}</span>
+                                        </div>
+                                    </SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
                     </div>
 
                     <Button
@@ -102,6 +171,95 @@ export default function GeneratorPage() {
                             </>
                         ) : 'GENERATE CONTENT'}
                     </Button>
+                </div>
+
+                {/* Quick Actions Panel */}
+                <div className="glass-panel p-6 rounded-xl space-y-4 border-white/10">
+                    <div className="flex items-center space-x-2">
+                        <Sparkles className="w-5 h-5 text-cyan-400" />
+                        <h2 className="text-lg font-bold text-white">Quick Actions</h2>
+                    </div>
+                    <p className="text-sm text-gray-500">Invoke agentic tools directly</p>
+
+                    <div className="grid grid-cols-3 gap-2">
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={handleGenerateScene}
+                            disabled={quickActionLoading !== null}
+                            className="flex flex-col items-center py-4 h-auto bg-slate-900/50 border-slate-700 hover:border-cyan-500/50 hover:bg-cyan-950/20"
+                        >
+                            {quickActionLoading === 'scene' ? (
+                                <Loader2 className="w-5 h-5 mb-1 animate-spin text-cyan-400" />
+                            ) : (
+                                <Clapperboard className="w-5 h-5 mb-1 text-cyan-400" />
+                            )}
+                            <span className="text-xs text-gray-300">Scene</span>
+                        </Button>
+
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={handleGenerateImage}
+                            disabled={quickActionLoading !== null}
+                            className="flex flex-col items-center py-4 h-auto bg-slate-900/50 border-slate-700 hover:border-blue-500/50 hover:bg-blue-950/20"
+                        >
+                            {quickActionLoading === 'image' ? (
+                                <Loader2 className="w-5 h-5 mb-1 animate-spin text-blue-400" />
+                            ) : (
+                                <Image className="w-5 h-5 mb-1 text-blue-400" />
+                            )}
+                            <span className="text-xs text-gray-300">Image</span>
+                        </Button>
+
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={handleGenerateVideo}
+                            disabled={quickActionLoading !== null}
+                            className="flex flex-col items-center py-4 h-auto bg-slate-900/50 border-slate-700 hover:border-purple-500/50 hover:bg-purple-950/20"
+                        >
+                            {quickActionLoading === 'video' ? (
+                                <Loader2 className="w-5 h-5 mb-1 animate-spin text-purple-400" />
+                            ) : (
+                                <Video className="w-5 h-5 mb-1 text-purple-400" />
+                            )}
+                            <span className="text-xs text-gray-300">Video</span>
+                        </Button>
+                    </div>
+
+                    {/* Quick Action Result */}
+                    <AnimatePresence>
+                        {quickActionResult && (
+                            <motion.div
+                                initial={{ opacity: 0, height: 0 }}
+                                animate={{ opacity: 1, height: 'auto' }}
+                                exit={{ opacity: 0, height: 0 }}
+                                className="overflow-hidden"
+                            >
+                                <div className="mt-4 p-3 rounded-lg bg-black/30 border border-slate-700">
+                                    <div className="flex items-center justify-between mb-2">
+                                        <Badge variant="outline" className="border-cyan-500/50 text-cyan-400 text-xs">
+                                            {quickActionResult.type}
+                                        </Badge>
+                                        <Button
+                                            variant="ghost"
+                                            size="sm"
+                                            className="h-6 px-2 text-xs text-gray-500"
+                                            onClick={() => setQuickActionResult(null)}
+                                        >
+                                            Clear
+                                        </Button>
+                                    </div>
+                                    <pre className="text-xs text-gray-400 overflow-auto max-h-32 whitespace-pre-wrap">
+                                        {typeof quickActionResult.data === 'string'
+                                            ? quickActionResult.data
+                                            : JSON.stringify(quickActionResult.data, null, 2)}
+                                    </pre>
+                                </div>
+                            </motion.div>
+                        )}
+                    </AnimatePresence>
                 </div>
             </motion.div>
 
@@ -154,9 +312,17 @@ export default function GeneratorPage() {
                                                     Issues Detected
                                                 </Badge>
                                             )}
+                                            <Badge variant="outline" className="border-cyan-500/50 text-cyan-400 bg-cyan-950/30 px-2 py-1 text-xs">
+                                                {llmModel.name}
+                                            </Badge>
                                         </div>
                                         <div className="flex space-x-2">
-                                            <Button variant="ghost" size="sm" className="text-gray-400 hover:text-white">
+                                            <Button
+                                                variant="ghost"
+                                                size="sm"
+                                                className="text-gray-400 hover:text-white"
+                                                onClick={copyToClipboard}
+                                            >
                                                 <Copy className="w-4 h-4 mr-2" /> Copy
                                             </Button>
                                             <Button variant="secondary" size="sm" className="bg-cyan-500/20 text-cyan-400 border border-cyan-500/30 hover:bg-cyan-500/30">
