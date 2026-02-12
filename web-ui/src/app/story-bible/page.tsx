@@ -1,11 +1,14 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { User, Shield, Briefcase, Zap } from "lucide-react";
+import { User, Shield, Briefcase, Zap, Search, Loader2, X, ExternalLink } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import { osintResearchAction } from "../actions";
 
 export default function StoryBiblePage() {
     const characters = [
@@ -55,6 +58,26 @@ export default function StoryBiblePage() {
             promptKeywords: "silver hair precisely styled, Chanel suit, minimal exceptional jewelry"
         }
     ];
+
+    // Research state
+    const [researchLoading, setResearchLoading] = useState<string | null>(null);
+    const [researchResult, setResearchResult] = useState<{ name: string; data: unknown } | null>(null);
+
+    const handleResearch = async (characterName: string) => {
+        setResearchLoading(characterName);
+        setResearchResult(null);
+        try {
+            const result = await osintResearchAction(
+                `${characterName} persona wealth advisor financial services AI technology`,
+                'persona'
+            );
+            setResearchResult({ name: characterName, data: result });
+        } catch (e) {
+            setResearchResult({ name: characterName, data: { error: 'Failed to perform research' } });
+        } finally {
+            setResearchLoading(null);
+        }
+    };
 
     return (
         <div className="flex-1 space-y-6 pt-6">
@@ -106,11 +129,75 @@ export default function StoryBiblePage() {
                                             PROMPT_KEYS: {char.promptKeywords}
                                         </p>
                                     </div>
+
+                                    {/* Research Button */}
+                                    <Button
+                                        variant="outline"
+                                        size="sm"
+                                        onClick={() => handleResearch(char.name)}
+                                        disabled={researchLoading !== null}
+                                        className="w-full mt-2 bg-slate-900/50 border-slate-700 hover:border-cyan-500/50 hover:bg-cyan-950/20 text-gray-300"
+                                    >
+                                        {researchLoading === char.name ? (
+                                            <>
+                                                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                                                Researching...
+                                            </>
+                                        ) : (
+                                            <>
+                                                <Search className="w-4 h-4 mr-2" />
+                                                Research Persona
+                                            </>
+                                        )}
+                                    </Button>
                                 </CardContent>
                             </Card>
                         ))}
                     </div>
-                </TabsContent >
+                </TabsContent>
+
+                {/* Research Modal */}
+                <AnimatePresence>
+                    {researchResult && (
+                        <motion.div
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-6"
+                            onClick={() => setResearchResult(null)}
+                        >
+                            <motion.div
+                                initial={{ scale: 0.9 }}
+                                animate={{ scale: 1 }}
+                                className="bg-slate-950 border border-border rounded-2xl max-w-2xl w-full max-h-[80vh] overflow-hidden shadow-2xl"
+                                onClick={(e) => e.stopPropagation()}
+                            >
+                                <div className="flex items-center justify-between p-4 border-b border-border">
+                                    <div className="flex items-center space-x-3">
+                                        <Search className="w-5 h-5 text-cyan-400" />
+                                        <h3 className="text-lg font-bold text-white">OSINT Research: {researchResult.name}</h3>
+                                    </div>
+                                    <Button variant="ghost" size="icon" onClick={() => setResearchResult(null)}>
+                                        <X className="w-5 h-5" />
+                                    </Button>
+                                </div>
+                                <ScrollArea className="max-h-[60vh] p-4">
+                                    {typeof researchResult.data === 'object' && researchResult.data !== null && 'response' in (researchResult.data as Record<string, unknown>) ? (
+                                        <div className="prose prose-invert max-w-none">
+                                            <p className="text-slate-300 whitespace-pre-wrap">
+                                                {(researchResult.data as { response: string }).response}
+                                            </p>
+                                        </div>
+                                    ) : (
+                                        <pre className="text-sm text-gray-400 overflow-auto whitespace-pre-wrap">
+                                            {JSON.stringify(researchResult.data, null, 2)}
+                                        </pre>
+                                    )}
+                                </ScrollArea>
+                            </motion.div>
+                        </motion.div>
+                    )}
+                </AnimatePresence>
 
                 <TabsContent value="brand">
                     <Card className="bg-card border-border text-card-foreground shadow-lg">

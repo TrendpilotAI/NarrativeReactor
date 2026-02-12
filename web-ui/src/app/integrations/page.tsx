@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Suspense } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -8,7 +8,7 @@ import { useSearchParams } from 'next/navigation';
 import { CheckCircle2, Twitter, Link2, RefreshCw } from "lucide-react";
 import { listIntegrationsAction, getAuthUrlAction } from "../actions";
 
-export default function IntegrationsPage() {
+function IntegrationsContent() {
     const [integrations, setIntegrations] = useState<any[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const searchParams = useSearchParams();
@@ -96,5 +96,17 @@ export default function IntegrationsPage() {
                 )}
             </div>
         </div>
+    );
+}
+
+export default function IntegrationsPage() {
+    return (
+        <Suspense fallback={
+            <div className="flex justify-center py-20">
+                <RefreshCw className="w-10 h-10 text-cyan-500 animate-spin" />
+            </div>
+        }>
+            <IntegrationsContent />
+        </Suspense>
     );
 }

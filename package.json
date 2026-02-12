@@ -9,7 +9,10 @@
     "dev": "genkit start -- npx tsx --watch src/index.ts",
     "docs:serve": "mkdocs serve",
     "docs:build": "mkdocs build",
-    "docs:deploy": "mkdocs gh-deploy --force"
+    "docs:deploy": "mkdocs gh-deploy --force",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.33.0",
@@ -37,9 +40,11 @@
   "devDependencies": {
     "@types/express": "^4.17.21",
     "@types/node": "^20.11.0",
+    "@vitest/coverage-v8": "^3.0.0",
     "firebase-tools": "^15.3.0",
     "genkit-cli": "^1.27.0",
     "tsx": "^4.7.0",
-    "typescript": "^5.3.0"
+    "typescript": "^5.3.0",
+    "vitest": "^3.0.0"
   }
 }

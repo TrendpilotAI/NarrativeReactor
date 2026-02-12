@@ -11,6 +11,7 @@ import { useState } from 'react';
 const navItems = [
     { name: 'Dashboard', path: '/', icon: LayoutDashboard },
     { name: 'Generator', path: '/generator', icon: Zap },
+    { name: 'Research', path: '/research', icon: TrendingUp },
     { name: 'Story Bible', path: '/story-bible', icon: BookOpen },
     { name: 'Integrations', path: '/integrations', icon: Share2 },
     { name: 'Performance', path: '/performance', icon: TrendingUp },
