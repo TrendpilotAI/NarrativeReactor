@@ -16,7 +16,7 @@
     "test:ci": "vitest run --coverage --reporter=junit --outputFile=test-results.xml"
   },
   "dependencies": {
-    "@anthropic-ai/sdk": "^0.33.0",
+    "@anthropic-ai/sdk": "^0.74.0",
     "@fal-ai/client": "^1.8.4",
     "@genkit-ai/dotprompt": "*",
     "@genkit-ai/express": "^1.27.0",
