@@ -1,0 +1,107 @@
+{
+  "brands": [
+    {
+      "id": "signal-studio",
+      "name": "Signal Studio",
+      "guidelines": "Professional, innovative, audience-first content creation.",
+      "voiceTone": "confident, knowledgeable, approachable",
+      "colors": [
+        "#6C5CE7",
+        "#00B894",
+        "#FDCB6E"
+      ],
+      "logos": [
+        "signal-studio-logo.svg"
+      ],
+      "targetAudience": "Content creators, marketers, and digital storytellers",
+      "prohibitedWords": [
+        "cheap",
+        "spam",
+        "clickbait"
+      ],
+      "createdAt": "2026-02-17T13:24:00.362Z",
+      "updatedAt": "2026-02-17T13:24:00.363Z"
+    },
+    {
+      "name": "TestBrand",
+      "guidelines": "Be professional and innovative",
+      "voiceTone": "confident, formal",
+      "colors": [
+        "#FF0000"
+      ],
+      "logos": [
+        "logo.png"
+      ],
+      "targetAudience": "developers",
+      "prohibitedWords": [
+        "spam"
+      ],
+      "id": "44bba6d8-13ce-49b6-8254-28dfd79963be",
+      "createdAt": "2026-02-17T13:24:00.364Z",
+      "updatedAt": "2026-02-17T13:24:00.364Z"
+    },
+    {
+      "name": "Updated",
+      "guidelines": "",
+      "voiceTone": "",
+      "colors": [],
+      "logos": [],
+      "targetAudience": "",
+      "prohibitedWords": [],
+      "id": "527b61f9-4465-4d85-abc7-a7f95af8059f",
+      "createdAt": "2026-02-17T13:24:00.368Z",
+      "updatedAt": "2026-02-17T13:24:00.368Z"
+    },
+    {
+      "name": "ScoreBrand",
+      "guidelines": "Professional innovative audience-first content creation storytelling",
+      "voiceTone": "confident, formal",
+      "colors": [
+        "#000"
+      ],
+      "logos": [],
+      "targetAudience": "marketers",
+      "prohibitedWords": [
+        "spam",
+        "clickbait"
+      ],
+      "id": "c88bec01-dc65-4cea-96be-c6063e50fbf2",
+      "createdAt": "2026-02-17T13:24:00.391Z",
+      "updatedAt": "2026-02-17T13:24:00.391Z"
+    },
+    {
+      "name": "ScoreBrand",
+      "guidelines": "Professional innovative audience-first content creation storytelling",
+      "voiceTone": "confident, formal",
+      "colors": [
+        "#000"
+      ],
+      "logos": [],
+      "targetAudience": "marketers",
+      "prohibitedWords": [
+        "spam",
+        "clickbait"
+      ],
+      "id": "ce170193-b0e3-42eb-874b-2f19caa8e90b",
+      "createdAt": "2026-02-17T13:24:00.392Z",
+      "updatedAt": "2026-02-17T13:24:00.392Z"
+    },
+    {
+      "name": "ScoreBrand",
+      "guidelines": "Professional innovative audience-first content creation storytelling",
+      "voiceTone": "confident, formal",
+      "colors": [
+        "#000"
+      ],
+      "logos": [],
+      "targetAudience": "marketers",
+      "prohibitedWords": [
+        "spam",
+        "clickbait"
+      ],
+      "id": "a5218efe-61d9-4372-9d80-930e2f4ef74d",
+      "createdAt": "2026-02-17T13:24:00.393Z",
+      "updatedAt": "2026-02-17T13:24:00.393Z"
+    }
+  ]
+}

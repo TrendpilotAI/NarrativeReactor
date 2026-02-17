@@ -8,7 +8,7 @@ export interface GenerationResult {
     duration?: number;
 }
 
-export async function generateImage(prompt: string, modelId: string = 'fal-ai/hunyuan-image/v3/instruct/text-to-image'): Promise<GenerationResult> {
+export async function generateImage(prompt: string, modelId: string = process.env.FAL_IMAGE_MODEL || 'fal-ai/hunyuan-image/v3/instruct/text-to-image'): Promise<GenerationResult> {
     const start = Date.now();
     try {
         const result: any = await fal.subscribe(modelId, {
@@ -61,7 +61,7 @@ export async function generateImage(prompt: string, modelId: string = 'fal-ai/hu
     }
 }
 
-export async function generateVideo(prompt: string, imageUrl?: string, modelId: string = 'fal-ai/bytedance/seedance/v1.5/pro/text-to-video'): Promise<GenerationResult> {
+export async function generateVideo(prompt: string, imageUrl?: string, modelId: string = process.env.FAL_VIDEO_MODEL || 'fal-ai/bytedance/seedance/v1.5/pro/text-to-video'): Promise<GenerationResult> {
     const start = Date.now();
     try {
         const endpoint = modelId;

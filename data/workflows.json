@@ -1,0 +1,81 @@
+{
+  "reviews": [
+    {
+      "id": "0f39c00c-ea43-4c0d-adb9-6bfef13efeed",
+      "contentId": "content-100",
+      "brandId": "brand-x",
+      "state": "review",
+      "history": [
+        {
+          "from": "draft",
+          "to": "review",
+          "by": "system",
+          "timestamp": "2026-02-17T13:24:00.384Z"
+        }
+      ],
+      "createdAt": "2026-02-17T13:24:00.384Z",
+      "updatedAt": "2026-02-17T13:24:00.384Z"
+    },
+    {
+      "id": "ea9e9b50-48fe-4ffc-a612-85c87db716ae",
+      "contentId": "content-approve",
+      "brandId": "brand-x",
+      "state": "approved",
+      "history": [
+        {
+          "from": "draft",
+          "to": "review",
+          "by": "system",
+          "timestamp": "2026-02-17T13:24:00.385Z"
+        },
+        {
+          "from": "review",
+          "to": "approved",
+          "by": "reviewer-1",
+          "timestamp": "2026-02-17T13:24:00.386Z"
+        }
+      ],
+      "createdAt": "2026-02-17T13:24:00.385Z",
+      "updatedAt": "2026-02-17T13:24:00.386Z"
+    },
+    {
+      "id": "e78cff0a-a788-4fd4-ae35-504ad1fa4b88",
+      "contentId": "content-reject",
+      "brandId": "brand-x",
+      "state": "rejected",
+      "history": [
+        {
+          "from": "draft",
+          "to": "review",
+          "by": "system",
+          "timestamp": "2026-02-17T13:24:00.387Z"
+        },
+        {
+          "from": "review",
+          "to": "rejected",
+          "by": "reviewer-1",
+          "reason": "Off brand",
+          "timestamp": "2026-02-17T13:24:00.389Z"
+        }
+      ],
+      "createdAt": "2026-02-17T13:24:00.387Z",
+      "updatedAt": "2026-02-17T13:24:00.389Z"
+    },
+    {
+      "id": "f91fc468-ba09-4210-8249-bbe11d25b2b7",
+      "contentId": "content-queue-1",
+      "brandId": "brand-q",
+      "state": "review",
+      "history": [
+        {
+          "from": "draft",
+          "to": "review",
+          "by": "system",
+          "timestamp": "2026-02-17T13:24:00.390Z"
+        }
+      ],
+      "createdAt": "2026-02-17T13:24:00.390Z",
+      "updatedAt": "2026-02-17T13:24:00.390Z"
+    }
+  ]
+}

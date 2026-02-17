@@ -1,0 +1,52 @@
+{
+  "assignments": [
+    {
+      "id": "70aed128-93b1-452e-9cb1-9c57673e9d72",
+      "contentId": "content-collab-1",
+      "userId": "user-1",
+      "deadline": "2026-03-01",
+      "status": "pending",
+      "createdAt": "2026-02-17T13:24:00.394Z"
+    },
+    {
+      "id": "9567d0b4-26a4-4d89-a56e-41d7655177ed",
+      "contentId": "content-collab-3",
+      "userId": "user-assign",
+      "deadline": "2026-04-01",
+      "status": "pending",
+      "createdAt": "2026-02-17T13:24:00.397Z"
+    }
+  ],
+  "comments": [
+    {
+      "id": "ab9114e3-f7e8-43d4-a264-849866649374",
+      "contentId": "content-collab-2",
+      "userId": "user-2",
+      "comment": "Looks good!",
+      "createdAt": "2026-02-17T13:24:00.395Z"
+    },
+    {
+      "id": "dd9e8470-5045-4434-a538-da25eddd4995",
+      "contentId": "content-collab-2",
+      "userId": "user-3",
+      "comment": "Needs revision.",
+      "createdAt": "2026-02-17T13:24:00.395Z"
+    }
+  ],
+  "notifications": [
+    {
+      "id": "1b80c708-9500-4be9-8f5a-217598f340a4",
+      "userId": "user-1",
+      "message": "You've been assigned content content-collab-1. Deadline: 2026-03-01",
+      "read": false,
+      "createdAt": "2026-02-17T13:24:00.394Z"
+    },
+    {
+      "id": "8cda735b-1d9c-4857-b35f-a3d73d487c33",
+      "userId": "user-assign",
+      "message": "You've been assigned content content-collab-3. Deadline: 2026-04-01",
+      "read": false,
+      "createdAt": "2026-02-17T13:24:00.397Z"
+    }
+  ]
+}

@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NarrativeReactor Dashboard</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body { background: #0f172a; color: #e2e8f0; font-family: 'Inter', system-ui, sans-serif; }
+    .card { background: #1e293b; border: 1px solid #334155; border-radius: 0.75rem; padding: 1.5rem; }
+    .btn { background: #6366f1; color: white; padding: 0.5rem 1rem; border-radius: 0.5rem; border: none; cursor: pointer; font-size: 0.875rem; }
+    .btn:hover { background: #4f46e5; }
+    .badge { display: inline-block; padding: 0.125rem 0.5rem; border-radius: 9999px; font-size: 0.75rem; }
+    .badge-green { background: #065f46; color: #6ee7b7; }
+    .badge-blue { background: #1e3a5f; color: #93c5fd; }
+    .badge-yellow { background: #713f12; color: #fcd34d; }
+    .spinner { animation: spin 1s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+  </style>
+</head>
+<body class="min-h-screen p-6">
+  <div class="max-w-6xl mx-auto">
+    <header class="flex items-center justify-between mb-8">
+      <div>
+        <h1 class="text-3xl font-bold text-white">🎬 NarrativeReactor</h1>
+        <p class="text-slate-400 mt-1">AI Content Engine Dashboard</p>
+      </div>
+      <div id="status" class="card py-2 px-4">
+        <span class="badge badge-yellow">Checking...</span>
+      </div>
+    </header>
+
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+      <div class="card">
+        <h3 class="text-slate-400 text-sm mb-1">Server Status</h3>
+        <div id="server-status" class="text-2xl font-bold">—</div>
+        <div id="uptime" class="text-slate-500 text-sm mt-1"></div>
+      </div>
+      <div class="card">
+        <h3 class="text-slate-400 text-sm mb-1">Total Cost</h3>
+        <div id="total-cost" class="text-2xl font-bold text-green-400">$0.00</div>
+        <div id="cost-today" class="text-slate-500 text-sm mt-1"></div>
+      </div>
+      <div class="card">
+        <h3 class="text-slate-400 text-sm mb-1">Generations</h3>
+        <div id="gen-count" class="text-2xl font-bold text-indigo-400">0</div>
+        <div class="text-slate-500 text-sm mt-1">total tracked</div>
+      </div>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+      <div class="card">
+        <h2 class="text-lg font-semibold mb-4 text-white">⚡ Available Flows</h2>
+        <div class="space-y-3">
+          <div class="flex items-center justify-between p-3 bg-slate-800 rounded-lg">
+            <div><span class="font-medium">Content Generation</span><br><span class="text-slate-400 text-xs">Generate platform-specific content</span></div>
+            <button class="btn" onclick="tryFlow('generate')">Try It</button>
+          </div>
+          <div class="flex items-center justify-between p-3 bg-slate-800 rounded-lg">
+            <div><span class="font-medium">Video Generation</span><br><span class="text-slate-400 text-xs">AI-powered video pipeline</span></div>
+            <button class="btn" onclick="tryFlow('video')">Try It</button>
+          </div>
+          <div class="flex items-center justify-between p-3 bg-slate-800 rounded-lg">
+            <div><span class="font-medium">Brand Compliance</span><br><span class="text-slate-400 text-xs">Check content compliance</span></div>
+            <button class="btn" onclick="tryFlow('compliance')">Try It</button>
+          </div>
+          <div class="flex items-center justify-between p-3 bg-slate-800 rounded-lg">
+            <div><span class="font-medium">Agentic Chat</span><br><span class="text-slate-400 text-xs">Multi-agent conversation</span></div>
+            <button class="btn" onclick="tryFlow('chat')">Try It</button>
+          </div>
+          <div class="flex items-center justify-between p-3 bg-slate-800 rounded-lg">
+            <div><span class="font-medium">Social Post</span><br><span class="text-slate-400 text-xs">Post to connected accounts</span></div>
+            <button class="btn" onclick="tryFlow('social')">Try It</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2 class="text-lg font-semibold mb-4 text-white">💰 Cost Breakdown</h2>
+        <div id="cost-breakdown" class="space-y-2">
+          <p class="text-slate-500">Loading...</p>
+        </div>
+
+        <h2 class="text-lg font-semibold mb-4 mt-6 text-white">🔗 Connected Accounts</h2>
+        <div id="integrations" class="space-y-2">
+          <p class="text-slate-500">Loading...</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="card mb-8">
+      <h2 class="text-lg font-semibold mb-4 text-white">📜 Recent Activity</h2>
+      <div id="recent-activity" class="space-y-2">
+        <p class="text-slate-500">Loading...</p>
+      </div>
+    </div>
+
+    <!-- Flow Modal -->
+    <div id="modal" class="fixed inset-0 bg-black/60 hidden items-center justify-center z-50" onclick="if(event.target===this)closeModal()">
+      <div class="card max-w-lg w-full mx-4">
+        <h3 id="modal-title" class="text-lg font-semibold mb-4"></h3>
+        <div id="modal-body"></div>
+        <div class="flex justify-end gap-2 mt-4">
+          <button class="btn" style="background:#475569" onclick="closeModal()">Close</button>
+          <button id="modal-submit" class="btn" onclick="submitFlow()">Run</button>
+        </div>
+        <pre id="modal-result" class="mt-4 bg-slate-900 p-3 rounded text-xs overflow-auto max-h-64 hidden"></pre>
+      </div>
+    </div>
+  </div>
+
+<script>
+const API_KEY = localStorage.getItem('nr_api_key') || '';
+const headers = { 'Content-Type': 'application/json', ...(API_KEY ? { 'X-API-Key': API_KEY } : {}) };
+const startTime = Date.now();
+
+async function fetchJSON(url) {
+  try {
+    const r = await fetch(url, { headers });
+    return r.ok ? await r.json() : null;
+  } catch { return null; }
+}
+
+async function refresh() {
+  // Health
+  const health = await fetchJSON('/health');
+  const statusEl = document.getElementById('status');
+  const serverEl = document.getElementById('server-status');
+  if (health?.status === 'ok') {
+    statusEl.innerHTML = '<span class="badge badge-green">● Online</span>';
+    serverEl.textContent = '✅ Online';
+  } else {
+    statusEl.innerHTML = '<span class="badge" style="background:#7f1d1d;color:#fca5a5">● Offline</span>';
+    serverEl.textContent = '❌ Offline';
+  }
+
+  // Costs
+  const costs = await fetchJSON('/api/costs');
+  if (costs) {
+    document.getElementById('total-cost').textContent = '$' + costs.total.toFixed(3);
+    document.getElementById('gen-count').textContent = costs.recentEntries?.length || 0;
+    const today = new Date().toISOString().slice(0, 10);
+    const todayCost = costs.byDay?.[today] || 0;
+    document.getElementById('cost-today').textContent = `$${todayCost.toFixed(3)} today`;
+
+    const breakdownEl = document.getElementById('cost-breakdown');
+    if (Object.keys(costs.byType || {}).length > 0) {
+      breakdownEl.innerHTML = Object.entries(costs.byType).map(([k, v]) =>
+        `<div class="flex justify-between p-2 bg-slate-800 rounded"><span>${k}</span><span class="text-green-400">$${Number(v).toFixed(3)}</span></div>`
+      ).join('');
+    } else {
+      breakdownEl.innerHTML = '<p class="text-slate-500">No costs recorded yet</p>';
+    }
+
+    const actEl = document.getElementById('recent-activity');
+    const recent = (costs.recentEntries || []).slice(-10).reverse();
+    if (recent.length) {
+      actEl.innerHTML = recent.map(e =>
+        `<div class="flex justify-between p-2 bg-slate-800 rounded text-sm">
+          <span><span class="badge badge-blue">${e.type}</span> ${e.description || ''}</span>
+          <span class="text-slate-400">${new Date(e.timestamp).toLocaleString()} · $${e.amount.toFixed(3)}</span>
+        </div>`
+      ).join('');
+    } else {
+      actEl.innerHTML = '<p class="text-slate-500">No activity yet</p>';
+    }
+  }
+
+  // Integrations
+  const integrations = await fetchJSON('/api/social/integrations');
+  const intEl = document.getElementById('integrations');
+  if (integrations && Array.isArray(integrations) && integrations.length > 0) {
+    intEl.innerHTML = integrations.map(i =>
+      `<div class="flex items-center gap-2 p-2 bg-slate-800 rounded"><span class="badge badge-green">●</span> ${i.provider || i.name || JSON.stringify(i)}</div>`
+    ).join('');
+  } else {
+    intEl.innerHTML = '<p class="text-slate-500">No accounts connected</p>';
+  }
+}
+
+const flowForms = {
+  generate: { title: 'Content Generation', fields: [
+    { name: 'episodeId', label: 'Episode ID', placeholder: 'ep-001' },
+    { name: 'platform', label: 'Platform', placeholder: 'twitter' },
+  ]},
+  video: { title: 'Video Generation', fields: [
+    { name: 'theme', label: 'Theme', placeholder: 'A magical forest adventure' },
+    { name: 'characters', label: 'Characters (comma-sep)', placeholder: 'hero, villain' },
+  ]},
+  compliance: { title: 'Brand Compliance', fields: [
+    { name: 'content', label: 'Content', placeholder: 'Check this text...' },
+    { name: 'platform', label: 'Platform', placeholder: 'instagram' },
+  ]},
+  chat: { title: 'Agentic Chat', fields: [
+    { name: 'message', label: 'Message', placeholder: 'Hello, help me create...' },
+  ]},
+  social: { title: 'Social Post', fields: [
+    { name: 'provider', label: 'Provider', placeholder: 'twitter' },
+    { name: 'message', label: 'Message', placeholder: 'Hello world!' },
+  ]},
+};
+
+let currentFlow = null;
+
+function tryFlow(name) {
+  currentFlow = name;
+  const f = flowForms[name];
+  document.getElementById('modal-title').textContent = '⚡ ' + f.title;
+  document.getElementById('modal-body').innerHTML = f.fields.map(fd =>
+    `<div class="mb-3"><label class="block text-sm text-slate-400 mb-1">${fd.label}</label>
+     <input name="${fd.name}" class="w-full bg-slate-800 border border-slate-600 rounded px-3 py-2 text-white" placeholder="${fd.placeholder}"></div>`
+  ).join('');
+  document.getElementById('modal-result').classList.add('hidden');
+  document.getElementById('modal').classList.remove('hidden');
+  document.getElementById('modal').classList.add('flex');
+}
+
+function closeModal() {
+  document.getElementById('modal').classList.add('hidden');
+  document.getElementById('modal').classList.remove('flex');
+}
+
+async function submitFlow() {
+  const inputs = document.querySelectorAll('#modal-body input');
+  const body = {};
+  inputs.forEach(i => {
+    let v = i.value || i.placeholder;
+    if (i.name === 'characters') v = v.split(',').map(s => s.trim());
+    body[i.name] = v;
+  });
+
+  const endpoints = { generate: '/api/generate', video: '/api/video', compliance: '/api/compliance', chat: '/api/chat', social: '/api/social/post' };
+  const resultEl = document.getElementById('modal-result');
+  resultEl.textContent = 'Running...';
+  resultEl.classList.remove('hidden');
+
+  try {
+    const r = await fetch(endpoints[currentFlow], { method: 'POST', headers, body: JSON.stringify(body) });
+    const data = await r.json();
+    resultEl.textContent = JSON.stringify(data, null, 2);
+  } catch (e) {
+    resultEl.textContent = 'Error: ' + e.message;
+  }
+  refresh();
+}
+
+// API key prompt
+if (!API_KEY) {
+  const k = prompt('Enter API key (leave empty for no auth):');
+  if (k) { localStorage.setItem('nr_api_key', k); location.reload(); }
+}
+
+refresh();
+setInterval(refresh, 30000);
+</script>
+</body>
+</html>
