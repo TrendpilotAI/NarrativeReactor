@@ -11,10 +11,22 @@
           "to": "review",
           "by": "system",
           "timestamp": "2026-02-17T13:24:00.384Z"
+        },
+        {
+          "from": "review",
+          "to": "review",
+          "by": "system",
+          "timestamp": "2026-02-18T04:36:38.020Z"
+        },
+        {
+          "from": "review",
+          "to": "review",
+          "by": "system",
+          "timestamp": "2026-02-18T05:57:43.796Z"
         }
       ],
       "createdAt": "2026-02-17T13:24:00.384Z",
-      "updatedAt": "2026-02-17T13:24:00.384Z"
+      "updatedAt": "2026-02-18T05:57:43.796Z"
     },
     {
       "id": "ea9e9b50-48fe-4ffc-a612-85c87db716ae",
@@ -33,10 +45,34 @@
           "to": "approved",
           "by": "reviewer-1",
           "timestamp": "2026-02-17T13:24:00.386Z"
+        },
+        {
+          "from": "approved",
+          "to": "review",
+          "by": "system",
+          "timestamp": "2026-02-18T04:36:38.032Z"
+        },
+        {
+          "from": "review",
+          "to": "approved",
+          "by": "reviewer-1",
+          "timestamp": "2026-02-18T04:36:38.033Z"
+        },
+        {
+          "from": "approved",
+          "to": "review",
+          "by": "system",
+          "timestamp": "2026-02-18T05:57:43.813Z"
+        },
+        {
+          "from": "review",
+          "to": "approved",
+          "by": "reviewer-1",
+          "timestamp": "2026-02-18T05:57:43.814Z"
         }
       ],
       "createdAt": "2026-02-17T13:24:00.385Z",
-      "updatedAt": "2026-02-17T13:24:00.386Z"
+      "updatedAt": "2026-02-18T05:57:43.814Z"
     },
     {
       "id": "e78cff0a-a788-4fd4-ae35-504ad1fa4b88",
@@ -56,10 +92,36 @@
           "by": "reviewer-1",
           "reason": "Off brand",
           "timestamp": "2026-02-17T13:24:00.389Z"
+        },
+        {
+          "from": "rejected",
+          "to": "review",
+          "by": "system",
+          "timestamp": "2026-02-18T04:36:38.035Z"
+        },
+        {
+          "from": "review",
+          "to": "rejected",
+          "by": "reviewer-1",
+          "reason": "Off brand",
+          "timestamp": "2026-02-18T04:36:38.035Z"
+        },
+        {
+          "from": "rejected",
+          "to": "review",
+          "by": "system",
+          "timestamp": "2026-02-18T05:57:43.815Z"
+        },
+        {
+          "from": "review",
+          "to": "rejected",
+          "by": "reviewer-1",
+          "reason": "Off brand",
+          "timestamp": "2026-02-18T05:57:43.815Z"
         }
       ],
       "createdAt": "2026-02-17T13:24:00.387Z",
-      "updatedAt": "2026-02-17T13:24:00.389Z"
+      "updatedAt": "2026-02-18T05:57:43.815Z"
     },
     {
       "id": "f91fc468-ba09-4210-8249-bbe11d25b2b7",
@@ -72,10 +134,22 @@
           "to": "review",
           "by": "system",
           "timestamp": "2026-02-17T13:24:00.390Z"
+        },
+        {
+          "from": "review",
+          "to": "review",
+          "by": "system",
+          "timestamp": "2026-02-18T04:36:38.036Z"
+        },
+        {
+          "from": "review",
+          "to": "review",
+          "by": "system",
+          "timestamp": "2026-02-18T05:57:43.816Z"
         }
       ],
       "createdAt": "2026-02-17T13:24:00.390Z",
-      "updatedAt": "2026-02-17T13:24:00.390Z"
+      "updatedAt": "2026-02-18T05:57:43.816Z"
     }
   ]
 }

@@ -15,6 +15,38 @@
       "deadline": "2026-04-01",
       "status": "pending",
       "createdAt": "2026-02-17T13:24:00.397Z"
+    },
+    {
+      "id": "33715dcb-b33f-47e4-854d-df8a08148ebf",
+      "contentId": "content-collab-1",
+      "userId": "user-1",
+      "deadline": "2026-03-01",
+      "status": "pending",
+      "createdAt": "2026-02-18T04:36:38.042Z"
+    },
+    {
+      "id": "71300763-ea19-49be-b1dc-94e2ddcf9303",
+      "contentId": "content-collab-3",
+      "userId": "user-assign",
+      "deadline": "2026-04-01",
+      "status": "pending",
+      "createdAt": "2026-02-18T04:36:38.052Z"
+    },
+    {
+      "id": "8b2c425f-b916-4b1e-8329-63412be6348e",
+      "contentId": "content-collab-1",
+      "userId": "user-1",
+      "deadline": "2026-03-01",
+      "status": "pending",
+      "createdAt": "2026-02-18T05:57:43.823Z"
+    },
+    {
+      "id": "5765a88c-5d6d-4848-8a80-0171143e995e",
+      "contentId": "content-collab-3",
+      "userId": "user-assign",
+      "deadline": "2026-04-01",
+      "status": "pending",
+      "createdAt": "2026-02-18T05:57:43.836Z"
     }
   ],
   "comments": [
@@ -31,6 +63,34 @@
       "userId": "user-3",
       "comment": "Needs revision.",
       "createdAt": "2026-02-17T13:24:00.395Z"
+    },
+    {
+      "id": "a4ba8f39-03b2-46e3-9cda-3c570fda8e6d",
+      "contentId": "content-collab-2",
+      "userId": "user-2",
+      "comment": "Looks good!",
+      "createdAt": "2026-02-18T04:36:38.042Z"
+    },
+    {
+      "id": "8a1ebd44-592a-4040-b9fa-b10bd4728ffe",
+      "contentId": "content-collab-2",
+      "userId": "user-3",
+      "comment": "Needs revision.",
+      "createdAt": "2026-02-18T04:36:38.042Z"
+    },
+    {
+      "id": "17c514ba-fe7b-452f-9e8e-ffcc4b5918a0",
+      "contentId": "content-collab-2",
+      "userId": "user-2",
+      "comment": "Looks good!",
+      "createdAt": "2026-02-18T05:57:43.833Z"
+    },
+    {
+      "id": "74c7e6f1-2d52-4c30-bcda-829f53d71d88",
+      "contentId": "content-collab-2",
+      "userId": "user-3",
+      "comment": "Needs revision.",
+      "createdAt": "2026-02-18T05:57:43.834Z"
     }
   ],
   "notifications": [
@@ -47,6 +107,34 @@
       "message": "You've been assigned content content-collab-3. Deadline: 2026-04-01",
       "read": false,
       "createdAt": "2026-02-17T13:24:00.397Z"
+    },
+    {
+      "id": "4fc9d921-455b-4559-8395-9c5d1335e542",
+      "userId": "user-1",
+      "message": "You've been assigned content content-collab-1. Deadline: 2026-03-01",
+      "read": false,
+      "createdAt": "2026-02-18T04:36:38.042Z"
+    },
+    {
+      "id": "38c43e74-8b0f-4f08-8302-33f9a7efff47",
+      "userId": "user-assign",
+      "message": "You've been assigned content content-collab-3. Deadline: 2026-04-01",
+      "read": false,
+      "createdAt": "2026-02-18T04:36:38.052Z"
+    },
+    {
+      "id": "0fdc7f11-486a-4d4d-a72e-b76c6dd71509",
+      "userId": "user-1",
+      "message": "You've been assigned content content-collab-1. Deadline: 2026-03-01",
+      "read": false,
+      "createdAt": "2026-02-18T05:57:43.823Z"
+    },
+    {
+      "id": "49fae117-71a5-457e-8d3e-09e330207559",
+      "userId": "user-assign",
+      "message": "You've been assigned content content-collab-3. Deadline: 2026-04-01",
+      "read": false,
+      "createdAt": "2026-02-18T05:57:43.836Z"
     }
   ]
 }

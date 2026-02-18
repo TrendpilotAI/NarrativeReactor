@@ -9,6 +9,7 @@ import { getAuthUrlFlow, connectSocialAccountFlow, listIntegrationsFlow, postToS
 import { startFlowServer } from '@genkit-ai/express';
 import { apiKeyAuth } from './middleware/auth';
 import apiRoutes from './routes/index';
+import pipelineRoutes from './routes/pipeline';
 import webhookRoutes from './routes/webhooks';
 import { getCostSummary } from './services/costTracker';
 
@@ -35,6 +36,9 @@ app.use('/api', apiKeyAuth);
 
 // API routes
 app.use('/api', apiRoutes);
+
+// Content pipeline & Blotato publishing routes
+app.use('/api/pipeline', apiKeyAuth, pipelineRoutes);
 
 // Cost tracking endpoint (behind auth)
 app.get('/api/costs', apiKeyAuth, (_req, res) => {
