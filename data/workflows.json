@@ -23,10 +23,16 @@
           "to": "review",
           "by": "system",
           "timestamp": "2026-02-18T05:57:43.796Z"
+        },
+        {
+          "from": "review",
+          "to": "review",
+          "by": "system",
+          "timestamp": "2026-02-18T08:27:48.670Z"
         }
       ],
       "createdAt": "2026-02-17T13:24:00.384Z",
-      "updatedAt": "2026-02-18T05:57:43.796Z"
+      "updatedAt": "2026-02-18T08:27:48.670Z"
     },
     {
       "id": "ea9e9b50-48fe-4ffc-a612-85c87db716ae",
@@ -69,10 +75,22 @@
           "to": "approved",
           "by": "reviewer-1",
           "timestamp": "2026-02-18T05:57:43.814Z"
+        },
+        {
+          "from": "approved",
+          "to": "review",
+          "by": "system",
+          "timestamp": "2026-02-18T08:27:48.683Z"
+        },
+        {
+          "from": "review",
+          "to": "approved",
+          "by": "reviewer-1",
+          "timestamp": "2026-02-18T08:27:48.683Z"
         }
       ],
       "createdAt": "2026-02-17T13:24:00.385Z",
-      "updatedAt": "2026-02-18T05:57:43.814Z"
+      "updatedAt": "2026-02-18T08:27:48.683Z"
     },
     {
       "id": "e78cff0a-a788-4fd4-ae35-504ad1fa4b88",
@@ -118,10 +136,23 @@
           "by": "reviewer-1",
           "reason": "Off brand",
           "timestamp": "2026-02-18T05:57:43.815Z"
+        },
+        {
+          "from": "rejected",
+          "to": "review",
+          "by": "system",
+          "timestamp": "2026-02-18T08:27:48.685Z"
+        },
+        {
+          "from": "review",
+          "to": "rejected",
+          "by": "reviewer-1",
+          "reason": "Off brand",
+          "timestamp": "2026-02-18T08:27:48.685Z"
         }
       ],
       "createdAt": "2026-02-17T13:24:00.387Z",
-      "updatedAt": "2026-02-18T05:57:43.815Z"
+      "updatedAt": "2026-02-18T08:27:48.685Z"
     },
     {
       "id": "f91fc468-ba09-4210-8249-bbe11d25b2b7",
@@ -146,10 +177,16 @@
           "to": "review",
           "by": "system",
           "timestamp": "2026-02-18T05:57:43.816Z"
+        },
+        {
+          "from": "review",
+          "to": "review",
+          "by": "system",
+          "timestamp": "2026-02-18T08:27:48.686Z"
         }
       ],
       "createdAt": "2026-02-17T13:24:00.390Z",
-      "updatedAt": "2026-02-18T05:57:43.816Z"
+      "updatedAt": "2026-02-18T08:27:48.686Z"
     }
   ]
 }

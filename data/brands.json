@@ -264,6 +264,87 @@
       "id": "72f03679-7c2c-44e7-9e8a-ed480aca8db5",
       "createdAt": "2026-02-18T05:57:43.820Z",
       "updatedAt": "2026-02-18T05:57:43.820Z"
+    },
+    {
+      "name": "TestBrand",
+      "guidelines": "Be professional and innovative",
+      "voiceTone": "confident, formal",
+      "colors": [
+        "#FF0000"
+      ],
+      "logos": [
+        "logo.png"
+      ],
+      "targetAudience": "developers",
+      "prohibitedWords": [
+        "spam"
+      ],
+      "id": "a4becc4d-b9c8-43d5-b7c3-48e462aa2849",
+      "createdAt": "2026-02-18T08:27:48.656Z",
+      "updatedAt": "2026-02-18T08:27:48.657Z"
+    },
+    {
+      "name": "Updated",
+      "guidelines": "",
+      "voiceTone": "",
+      "colors": [],
+      "logos": [],
+      "targetAudience": "",
+      "prohibitedWords": [],
+      "id": "6bb1fedc-c0f3-433e-9bab-7a4fb1cb480c",
+      "createdAt": "2026-02-18T08:27:48.661Z",
+      "updatedAt": "2026-02-18T08:27:48.661Z"
+    },
+    {
+      "name": "ScoreBrand",
+      "guidelines": "Professional innovative audience-first content creation storytelling",
+      "voiceTone": "confident, formal",
+      "colors": [
+        "#000"
+      ],
+      "logos": [],
+      "targetAudience": "marketers",
+      "prohibitedWords": [
+        "spam",
+        "clickbait"
+      ],
+      "id": "d3bb97bb-e43e-4dab-ac65-6f35d905add7",
+      "createdAt": "2026-02-18T08:27:48.686Z",
+      "updatedAt": "2026-02-18T08:27:48.686Z"
+    },
+    {
+      "name": "ScoreBrand",
+      "guidelines": "Professional innovative audience-first content creation storytelling",
+      "voiceTone": "confident, formal",
+      "colors": [
+        "#000"
+      ],
+      "logos": [],
+      "targetAudience": "marketers",
+      "prohibitedWords": [
+        "spam",
+        "clickbait"
+      ],
+      "id": "01203b17-1963-4a74-8d1d-b1204ad3cf0c",
+      "createdAt": "2026-02-18T08:27:48.688Z",
+      "updatedAt": "2026-02-18T08:27:48.688Z"
+    },
+    {
+      "name": "ScoreBrand",
+      "guidelines": "Professional innovative audience-first content creation storytelling",
+      "voiceTone": "confident, formal",
+      "colors": [
+        "#000"
+      ],
+      "logos": [],
+      "targetAudience": "marketers",
+      "prohibitedWords": [
+        "spam",
+        "clickbait"
+      ],
+      "id": "13486e9e-3bd8-40d6-a6bd-6029951013bb",
+      "createdAt": "2026-02-18T08:27:48.689Z",
+      "updatedAt": "2026-02-18T08:27:48.689Z"
     }
   ]
 }
