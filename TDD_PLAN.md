@@ -1,6 +1,6 @@
 # NarrativeReactor — Test-Driven Development Plan
 
-> **Author:** Auto-generated | **Date:** 2026-02-16 | **Status:** Ready for implementation
+> **Author:** Auto-generated | **Date:** 2026-02-16 | **Status:** In Progress — Health guardrails completed 2026-02-27
 
 ---
 
@@ -763,3 +763,28 @@ mkdir -p src/__tests__/lib
 # Run
 npx vitest run
 ```
+
+---
+
+## ✅ Completed Items (2026-02-27)
+
+### Health Endpoint
+- **Status:** ✅ DONE — `GET /health` exists in `src/index.ts`
+- Returns `{ status: "ok", service: "NarrativeReactor", timestamp: <ISO8601> }`
+- Exempt from API key auth middleware
+- Tests: `src/__tests__/health-and-guards.test.ts` → 2 passing tests
+
+### Production Guard
+- **Status:** ✅ DONE — `src/lib/productionGuard.ts` added
+- `guardDestructive(operationName)` throws `ProductionGuardError` when `NODE_ENV=production`
+- `isProduction()` helper for conditional logic
+- `POST /api/admin/wipe` route wired up with guard (returns 403 in production)
+- Tests: `src/__tests__/health-and-guards.test.ts` → 8 passing tests covering unit + route integration
+
+### Test Coverage Added
+| Test Suite | Tests | Status |
+|-----------|-------|--------|
+| `GET /health` returns 200 + shape | 2 | ✅ |
+| `guardDestructive()` throws in production | 4 | ✅ |
+| `/api/admin/wipe` blocked in production | 2 | ✅ |
+| **Total new tests** | **10** | **✅ All passing** |

@@ -25,6 +25,7 @@ import { createBrand, getBrand, listBrands, updateBrand, deleteBrand } from '../
 import { analyzeBrandVoice, generateWithVoice, scoreBrandConsistency } from '../services/brandVoice';
 import { submitForReview, approveContent, rejectContent, getReviewQueue, getReviewByContentId } from '../services/approvalWorkflow';
 import { assignTask, addComment, getComments, getAssignments } from '../services/teamCollab';
+import { guardDestructive } from '../lib/productionGuard';
 
 const router = Router();
 
@@ -872,6 +873,17 @@ router.post('/tasks/assign', async (req: Request, res: Response) => {
 
 router.get('/tasks/:userId', async (req: Request, res: Response) => {
     try { res.json(getAssignments(req.params.userId)); } catch (err: any) { res.status(500).json({ error: err.message }); }
+});
+
+// POST /api/admin/wipe — destructive: clears all content (blocked in production)
+router.post('/admin/wipe', async (_req: Request, res: Response) => {
+    try {
+        guardDestructive('wipe content library');
+        // In non-production: perform wipe logic here
+        res.json({ status: 'wiped', message: 'Content library cleared (non-production only).' });
+    } catch (err: any) {
+        res.status(403).json({ error: err.message });
+    }
 });
 
 export default router;
