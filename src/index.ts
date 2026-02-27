@@ -2,6 +2,7 @@ import express from 'express';
 import cors from 'cors';
 import path from 'path';
 import rateLimit from 'express-rate-limit';
+import { validateEnv } from './lib/env';
 import { generateContentFlow } from './flows/content-generation';
 import { verifyBrandCompliance } from './flows/compliance';
 import { videoGenerationFlow, agenticChatFlow } from './flows/orchestration';
@@ -12,6 +13,9 @@ import apiRoutes from './routes/index';
 import pipelineRoutes from './routes/pipeline';
 import webhookRoutes from './routes/webhooks';
 import { getCostSummary } from './services/costTracker';
+
+// Validate required env vars at startup — throws in production if missing
+validateEnv();
 
 const app = express();
 
@@ -51,9 +55,9 @@ app.use('/webhooks', webhookRoutes);
 // Static dashboard
 app.use(express.static(path.join(__dirname, '..', 'public')));
 
-// Health check
+// Health check — exempt from auth, safe for monitoring
 app.get('/health', (_req, res) => {
-    res.json({ status: 'ok', timestamp: new Date().toISOString() });
+    res.json({ status: 'ok', service: 'NarrativeReactor', timestamp: new Date().toISOString() });
 });
 
 // Start Express server

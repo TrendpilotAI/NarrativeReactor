@@ -5,7 +5,20 @@ export function apiKeyAuth(req: Request, res: Response, next: NextFunction): voi
     const validKey = process.env.API_KEY;
 
     if (!validKey) {
-        console.warn('API_KEY environment variable not set — auth disabled');
+        if (process.env.NODE_ENV === 'production') {
+            // FAIL CLOSED — never allow requests through when API_KEY is missing in production
+            res.status(503).json({ error: 'Service not configured — API_KEY required' });
+            return;
+        }
+        // Dev convenience: allow but scream loudly
+        console.warn('');
+        console.warn('⚠️  ⚠️  ⚠️  ⚠️  ⚠️  ⚠️  ⚠️  ⚠️  ⚠️  ⚠️  ⚠️  ⚠️  ⚠️  ⚠️  ⚠️  ⚠️  ⚠️  ⚠️  ⚠️  ⚠️');
+        console.warn('WARNING: API_KEY environment variable is NOT SET.');
+        console.warn('Auth is DISABLED — ALL REQUESTS ARE ALLOWED.');
+        console.warn('This is only acceptable in local development.');
+        console.warn('NEVER run without API_KEY in production!');
+        console.warn('⚠️  ⚠️  ⚠️  ⚠️  ⚠️  ⚠️  ⚠️  ⚠️  ⚠️  ⚠️  ⚠️  ⚠️  ⚠️  ⚠️  ⚠️  ⚠️  ⚠️  ⚠️  ⚠️  ⚠️');
+        console.warn('');
         next();
         return;
     }
