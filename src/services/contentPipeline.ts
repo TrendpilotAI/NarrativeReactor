@@ -7,6 +7,7 @@
 
 import { ai } from '../genkit.config';
 import { generateCopyClaude } from '../lib/claude';
+import { draftsRepo } from '../lib/db';
 import { z } from 'genkit';
 import crypto from 'crypto';
 
@@ -40,9 +41,6 @@ export interface ContentDraft {
   updatedAt: string;
   feedback?: string;
 }
-
-// ── In-memory draft store ──
-const drafts = new Map<string, ContentDraft>();
 
 // ── Step 1: Research ──
 
@@ -159,36 +157,36 @@ export async function runContentPipeline(input: PipelineInput): Promise<ContentD
     updatedAt: new Date().toISOString(),
   };
 
-  drafts.set(draft.id, draft);
+  draftsRepo.upsert(draft);
   return draft;
 }
 
 // ── Draft Management ──
 
 export function getDraft(id: string): ContentDraft | undefined {
-  return drafts.get(id);
+  return draftsRepo.get(id);
 }
 
 export function listDrafts(status?: string): ContentDraft[] {
-  const all = Array.from(drafts.values());
-  if (status) return all.filter(d => d.status === status);
-  return all.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+  return draftsRepo.list(status);
 }
 
 export function approveDraft(id: string): ContentDraft | undefined {
-  const draft = drafts.get(id);
+  const draft = draftsRepo.get(id);
   if (!draft) return undefined;
   draft.status = 'approved';
   draft.updatedAt = new Date().toISOString();
+  draftsRepo.upsert(draft);
   return draft;
 }
 
 export function rejectDraft(id: string, feedback: string): ContentDraft | undefined {
-  const draft = drafts.get(id);
+  const draft = draftsRepo.get(id);
   if (!draft) return undefined;
   draft.status = 'rejected';
   draft.feedback = feedback;
   draft.updatedAt = new Date().toISOString();
+  draftsRepo.upsert(draft);
   return draft;
 }
 
@@ -197,19 +195,21 @@ export function updateDraftContent(
   format: 'xThread' | 'linkedinPost' | 'blogArticle',
   content: string,
 ): ContentDraft | undefined {
-  const draft = drafts.get(id);
+  const draft = draftsRepo.get(id);
   if (!draft) return undefined;
   draft.formats[format] = content;
   draft.updatedAt = new Date().toISOString();
   // Reset to draft if it was rejected (re-editing)
   if (draft.status === 'rejected') draft.status = 'draft';
+  draftsRepo.upsert(draft);
   return draft;
 }
 
 export function markDraftPublished(id: string): ContentDraft | undefined {
-  const draft = drafts.get(id);
+  const draft = draftsRepo.get(id);
   if (!draft) return undefined;
   draft.status = 'published';
   draft.updatedAt = new Date().toISOString();
+  draftsRepo.upsert(draft);
   return draft;
 }

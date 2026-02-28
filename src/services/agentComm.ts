@@ -1,4 +1,5 @@
 import { randomUUID } from 'crypto';
+import { messageLogRepo } from '../lib/db';
 
 // --- Message Types ---
 
@@ -61,13 +62,10 @@ export function getRegisteredAgents(): Record<string, string> {
   return getAgentRegistry();
 }
 
-// --- Message log (in-memory) ---
-
-const messageLog: AgentMessage[] = [];
-const MESSAGE_LOG_MAX = 200;
+// --- Message log (persistent via SQLite) ---
 
 export function getMessageLog(): AgentMessage[] {
-  return [...messageLog];
+  return messageLogRepo.list();
 }
 
 // --- Send / Receive ---
@@ -95,8 +93,7 @@ export async function sendMessage(targetAgent: string, message: Omit<AgentMessag
     if (!resp.ok) {
       return { success: false, error: `HTTP ${resp.status}: ${await resp.text()}` };
     }
-    messageLog.push(fullMessage);
-    if (messageLog.length > MESSAGE_LOG_MAX) messageLog.shift();
+    messageLogRepo.append(fullMessage);
     return { success: true };
   } catch (err: any) {
     return { success: false, error: err.message };
@@ -118,8 +115,7 @@ export async function receiveMessage(message: AgentMessage): Promise<{ acknowled
   message.id = message.id || randomUUID();
   message.timestamp = message.timestamp || new Date().toISOString();
 
-  messageLog.push(message);
-  if (messageLog.length > MESSAGE_LOG_MAX) messageLog.shift();
+  messageLogRepo.append(message);
 
   const results: any[] = [];
   for (const handler of handlers) {

@@ -1,7 +1,6 @@
-import fs from 'fs';
-import path from 'path';
 import { randomUUID } from 'crypto';
 import dayjs from 'dayjs';
+import { campaignsRepo } from '../lib/db';
 
 export interface ScheduledPost {
   id: string;
@@ -22,27 +21,8 @@ export interface Campaign {
   updatedAt: string;
 }
 
-interface CampaignStore {
-  campaigns: Campaign[];
-}
-
-const DATA_DIR = path.resolve(process.cwd(), 'data');
-const CAMPAIGNS_FILE = path.join(DATA_DIR, 'campaigns.json');
-
-function ensureDataDir(): void {
-  if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR, { recursive: true });
-}
-
-function load(): CampaignStore {
-  ensureDataDir();
-  if (!fs.existsSync(CAMPAIGNS_FILE)) return { campaigns: [] };
-  try { return JSON.parse(fs.readFileSync(CAMPAIGNS_FILE, 'utf-8')); } catch { return { campaigns: [] }; }
-}
-
-function save(data: CampaignStore): void {
-  ensureDataDir();
-  fs.writeFileSync(CAMPAIGNS_FILE, JSON.stringify(data, null, 2));
-}
+// Run one-time import of legacy JSON data on first load
+campaignsRepo.importLegacy();
 
 // --- CRUD ---
 
@@ -74,30 +54,27 @@ export function createCampaign(theme: string, days: number, postsPerDay: number,
     updatedAt: new Date().toISOString(),
   };
 
-  const store = load();
-  store.campaigns.push(campaign);
-  save(store);
+  campaignsRepo.upsert(campaign);
   return campaign;
 }
 
 export function getCampaign(id: string): Campaign | undefined {
-  return load().campaigns.find(c => c.id === id);
+  return campaignsRepo.get(id);
 }
 
 export function listCampaigns(): Campaign[] {
-  return load().campaigns;
+  return campaignsRepo.list();
 }
 
 export function advanceCampaign(id: string): { campaign: Campaign; published?: ScheduledPost } | undefined {
-  const store = load();
-  const campaign = store.campaigns.find(c => c.id === id);
+  const campaign = campaignsRepo.get(id);
   if (!campaign) return undefined;
 
   const nextPost = campaign.posts.find(p => p.status === 'pending');
   if (!nextPost) {
     campaign.status = 'completed';
     campaign.updatedAt = new Date().toISOString();
-    save(store);
+    campaignsRepo.upsert(campaign);
     return { campaign };
   }
 
@@ -110,15 +87,10 @@ export function advanceCampaign(id: string): { campaign: Campaign; published?: S
     campaign.status = 'completed';
   }
 
-  save(store);
+  campaignsRepo.upsert(campaign);
   return { campaign, published: nextPost };
 }
 
 export function deleteCampaign(id: string): boolean {
-  const store = load();
-  const idx = store.campaigns.findIndex(c => c.id === id);
-  if (idx === -1) return false;
-  store.campaigns.splice(idx, 1);
-  save(store);
-  return true;
+  return campaignsRepo.delete(id);
 }
