@@ -4,6 +4,16 @@ import { analyzeContent, createVoiceProfile, addSamples, getVoiceProfile, genera
 import { submitForReview, approveContent, rejectContent, getReviewQueue, getReviewByContentId } from '../../src/services/approvalWorkflow';
 import { scoreContent, batchScore } from '../../src/services/brandScorer';
 import { assignTask, addComment, getComments, getAssignments, getNotifications } from '../../src/services/teamCollab';
+import { resetDb } from '../../src/lib/db';
+import fs from 'fs';
+import path from 'path';
+
+// Reset DB and file-based state between every test so state doesn't leak
+beforeEach(() => {
+  resetDb();
+  const collabFile = path.resolve(process.cwd(), 'data', 'collab.json');
+  if (fs.existsSync(collabFile)) fs.unlinkSync(collabFile);
+});
 
 // ── Brand Manager Tests ──
 

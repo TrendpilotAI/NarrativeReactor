@@ -37,6 +37,14 @@ export function getDb(): DatabaseSync {
   return _db;
 }
 
+/** Close and discard the singleton so the next getDb() creates a fresh instance. */
+export function resetDb(): void {
+  if (_db) {
+    _db.close();
+    _db = null;
+  }
+}
+
 // ── Migration system ──────────────────────────────────────────────────────────
 
 const MIGRATIONS: Array<{ version: number; up: string }> = [
