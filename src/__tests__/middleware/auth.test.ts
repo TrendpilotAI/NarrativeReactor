@@ -1,3 +1,4 @@
+import { vi, describe, it, expect, beforeEach, afterAll } from 'vitest';
 import { Request, Response, NextFunction } from 'express';
 import { apiKeyAuth } from '../../middleware/auth';
 
@@ -5,19 +6,19 @@ function makeReq(headers: Record<string, string> = {}): Request {
     return { headers } as unknown as Request;
 }
 
-function makeRes(): { res: Response; status: jest.Mock; json: jest.Mock } {
-    const json = jest.fn();
-    const status = jest.fn().mockReturnValue({ json });
+function makeRes(): { res: Response; status: ReturnType<typeof vi.fn>; json: ReturnType<typeof vi.fn> } {
+    const json = vi.fn();
+    const status = vi.fn().mockReturnValue({ json });
     const res = { status, json } as unknown as Response;
     return { res, status, json };
 }
 
 describe('apiKeyAuth middleware', () => {
-    const next: NextFunction = jest.fn();
+    const next: NextFunction = vi.fn();
     const originalEnv = process.env;
 
     beforeEach(() => {
-        jest.clearAllMocks();
+        vi.clearAllMocks();
         process.env = { ...originalEnv };
     });
 
@@ -87,7 +88,7 @@ describe('apiKeyAuth middleware', () => {
         });
 
         it('allows all requests (dev convenience) with a warning', () => {
-            const warnSpy = jest.spyOn(console, 'warn').mockImplementation(() => {});
+            const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
             const req = makeReq({});
             const { res } = makeRes();
             apiKeyAuth(req, res, next);

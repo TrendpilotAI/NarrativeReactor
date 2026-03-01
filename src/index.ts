@@ -13,14 +13,35 @@ import apiRoutes from './routes/index';
 import pipelineRoutes from './routes/pipeline';
 import webhookRoutes from './routes/webhooks';
 import { getCostSummary } from './services/costTracker';
+import { startScheduler } from './services/schedulerWorker';
 
 // Validate required env vars at startup — throws in production if missing
 validateEnv();
 
 const app = express();
 
-// CORS
-app.use(cors({ origin: '*' }));
+// CORS — restrict to allowed origins in production; allow all in development
+const ALLOWED_ORIGINS = process.env.CORS_ALLOWED_ORIGINS
+    ? process.env.CORS_ALLOWED_ORIGINS.split(',').map(o => o.trim())
+    : [];
+
+const corsOptions: cors.CorsOptions = {
+    origin: (origin, callback) => {
+        // In development without CORS_ALLOWED_ORIGINS, allow all
+        if (ALLOWED_ORIGINS.length === 0 && process.env.NODE_ENV !== 'production') {
+            return callback(null, true);
+        }
+        // Allow requests with no origin (server-to-server, curl, Postman)
+        if (!origin) return callback(null, true);
+        // Check against allowlist
+        if (ALLOWED_ORIGINS.includes(origin)) {
+            return callback(null, true);
+        }
+        callback(new Error(`Origin ${origin} not allowed by CORS`));
+    },
+    credentials: true,
+};
+app.use(cors(corsOptions));
 
 // Body parsing
 app.use(express.json());
@@ -81,7 +102,8 @@ startFlowServer({
         getMentionsFlow
     ],
     port: parseInt(process.env.GENKIT_PORT || '3402', 10),
-    cors: {
-        origin: '*',
-    }
+    cors: corsOptions,
 });
+
+// Start the posting scheduler (checks for due posts every 60s)
+startScheduler();
