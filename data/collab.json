@@ -1,22 +1,22 @@
 {
   "assignments": [
     {
-      "id": "a0cf0369-62f3-46c6-9dba-5d96d78e9b1b",
+      "id": "3fdc9fcf-798a-4cb4-b26c-3516a58847a1",
       "contentId": "content-collab-3",
       "userId": "user-assign",
       "deadline": "2026-04-01",
       "status": "pending",
-      "createdAt": "2026-03-01T05:43:09.007Z"
+      "createdAt": "2026-03-01T05:46:05.017Z"
     }
   ],
   "comments": [],
   "notifications": [
     {
-      "id": "12b500e0-7117-4874-8fa8-5d7b423536a0",
+      "id": "469f4ab1-feab-45b3-90fc-4851c5656c95",
       "userId": "user-assign",
       "message": "You've been assigned content content-collab-3. Deadline: 2026-04-01",
       "read": false,
-      "createdAt": "2026-03-01T05:43:09.007Z"
+      "createdAt": "2026-03-01T05:46:05.017Z"
     }
   ]
 }

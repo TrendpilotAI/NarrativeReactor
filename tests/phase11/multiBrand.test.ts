@@ -1,18 +1,22 @@
 import { describe, it, expect, beforeEach } from 'vitest';
+import fs from 'fs';
+import path from 'path';
 import { createBrand, getBrand, listBrands, updateBrand, deleteBrand, type Brand } from '../../src/services/brandManager';
 import { analyzeContent, createVoiceProfile, addSamples, getVoiceProfile, generateContentGuidance, deleteVoiceProfile } from '../../src/services/voiceCloner';
 import { submitForReview, approveContent, rejectContent, getReviewQueue, getReviewByContentId } from '../../src/services/approvalWorkflow';
 import { scoreContent, batchScore } from '../../src/services/brandScorer';
 import { assignTask, addComment, getComments, getAssignments, getNotifications } from '../../src/services/teamCollab';
 import { resetDb } from '../../src/lib/db';
-import fs from 'fs';
-import path from 'path';
 
-// Reset DB and file-based state between every test so state doesn't leak
+// Reset DB and JSON stores between every test so state doesn't leak
+const DATA_DIR = path.resolve(process.cwd(), 'data');
 beforeEach(() => {
   resetDb();
-  const collabFile = path.resolve(process.cwd(), 'data', 'collab.json');
-  if (fs.existsSync(collabFile)) fs.unlinkSync(collabFile);
+  // Clear JSON-file-backed stores
+  for (const file of ['collab.json', 'brands.json']) {
+    const p = path.join(DATA_DIR, file);
+    if (fs.existsSync(p)) fs.unlinkSync(p);
+  }
 });
 
 // ── Brand Manager Tests ──

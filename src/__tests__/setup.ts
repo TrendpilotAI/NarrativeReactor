@@ -1,4 +1,5 @@
 // Global test setup — set env vars so modules don't crash on import
+// Use in-memory DB to avoid file locking issues in parallel tests
 process.env.DATABASE_PATH = ':memory:';
 process.env.ANTHROPIC_API_KEY = 'test-key';
 process.env.FAL_KEY = 'test-fal-key';
