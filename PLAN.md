@@ -210,13 +210,13 @@ Before spawning agents, these can be done manually:
 
 ## Completion Checklist
 
-- [ ] 316 — CORS wildcard eliminated
-- [ ] 319 — Dashboard requires login
-- [ ] 315 — README exists
-- [ ] 317 — `docker build .` succeeds, `/health` returns 200
-- [ ] 321 — Sentry DSN env var wired up, events visible in dashboard
-- [ ] 318 — `/docs` returns Swagger UI
-- [ ] 320 — `pnpm test --coverage` shows ≥70% lines
-- [ ] 322 — `pnpm build` in web-ui succeeds, login flow works
+- [x] 316 — CORS wildcard eliminated ✅ (env-configurable allowlist, commit e2d4744+)
+- [x] 319 — Dashboard requires login ✅ (JWT cookie auth, DASHBOARD_PASSWORD, commit c0e38e1)
+- [x] 315 — README exists ✅ (comprehensive 145-line README, commit 4483110)
+- [x] 317 — `docker build .` succeeds, `/health` returns 200 ✅ (Dockerfile + railway.json, commit da6c30b)
+- [x] 321 — Sentry DSN env var wired up, events visible in dashboard ✅ (zero-dep HTTP reporter, commit b9d4ed9)
+- [x] 318 — `/docs` returns Swagger UI ✅ (OpenAPI 3.0 + Swagger UI, commit eb4ae52)
+- [ ] 320 — `npm test --coverage` shows ≥70% lines (currently 287 tests / 26 files — coverage measurement pending)
+- [ ] 322 — Web UI Next.js completion (React Vite dashboard exists, needs auth integration)
 
-**When all 8 boxes are checked: completeness = 9, ready for revenue-generating traffic.**
+**Status: 6/8 complete. Completeness ≈ 8.5. Two items remain for production readiness.**
