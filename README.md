@@ -1,5 +1,7 @@
 # NarrativeReactor
 
+[![CI](https://github.com/TrendpilotAI/NarrativeReactor/actions/workflows/ci.yml/badge.svg)](https://github.com/TrendpilotAI/NarrativeReactor/actions/workflows/ci.yml)
+
 AI-powered content generation platform for Signal Studio — multi-format content creation, brand compliance, social publishing, and campaign management.
 
 ## Features
