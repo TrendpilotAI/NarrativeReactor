@@ -12,7 +12,7 @@
  * The simple polling approach is reliable, restartable, and stateless.
  */
 
-import { getNextDue, markPublished } from './calendarStore';
+import { getNextDue, markPublished } from './calendar';
 import { publishToAll } from './publisher';
 
 const POLL_INTERVAL_MS = parseInt(process.env.SCHEDULER_POLL_MS || '60000', 10);

@@ -69,3 +69,15 @@ export async function getNextDue(): Promise<ScheduledPost | null> {
         .sort((a, b) => new Date(a.scheduledAt).getTime() - new Date(b.scheduledAt).getTime());
     return due[0] || null;
 }
+
+/**
+ * Mark a scheduled post as published.
+ */
+export async function markPublished(id: string): Promise<ScheduledPost | null> {
+    const posts = await loadCalendar();
+    const post = posts.find(p => p.id === id);
+    if (!post) return null;
+    post.status = 'published';
+    await saveCalendar(posts);
+    return post;
+}
