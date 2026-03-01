@@ -145,26 +145,39 @@ describe('social-providers', () => {
   });
 
   describe('saveIntegration', () => {
-    it('writes JSON file', async () => {
+    it('writes JSON file with encrypted tokens', async () => {
+      // Use a test encryption key
+      process.env.TOKEN_ENCRYPTION_KEY = 'a'.repeat(64);
       mockReadFile.mockRejectedValue(new Error('not found'));
       mockMkdir.mockResolvedValue(undefined);
       mockWriteFile.mockResolvedValue(undefined);
       const { saveIntegration } = await import('../../lib/social-providers');
-      const details = { id: '1', name: 'Test', username: 'test', accessToken: 'tok' };
+      const details = { id: '1', name: 'Test', username: 'test', accessToken: 'tok', refreshToken: 'rtok' };
       await saveIntegration('x', details);
       expect(mockMkdir).toHaveBeenCalled();
       expect(mockWriteFile).toHaveBeenCalled();
       const written = JSON.parse(mockWriteFile.mock.calls[0][1]);
-      expect(written.x).toEqual(details);
+      // Tokens should be encrypted (not plaintext)
+      expect(written.x.accessToken).toMatch(/^enc:v1:/);
+      expect(written.x.refreshToken).toMatch(/^enc:v1:/);
+      // Non-sensitive fields preserved
+      expect(written.x.id).toBe('1');
+      expect(written.x.name).toBe('Test');
+      delete process.env.TOKEN_ENCRYPTION_KEY;
     });
   });
 
   describe('loadIntegrations', () => {
-    it('reads existing file', async () => {
-      mockReadFile.mockResolvedValue(JSON.stringify({ x: { id: '1' } }));
+    it('reads existing file and decrypts tokens', async () => {
+      // Store with plaintext tokens (legacy format) — should pass through
+      mockReadFile.mockResolvedValue(JSON.stringify({
+        x: { id: '1', name: 'Test', username: 'test', accessToken: 'plaintext-tok' }
+      }));
+      process.env.NODE_ENV = 'development';
       const { loadIntegrations } = await import('../../lib/social-providers');
       const result = await loadIntegrations();
-      expect(result).toEqual({ x: { id: '1' } });
+      expect(result.x.id).toBe('1');
+      expect(result.x.accessToken).toBe('plaintext-tok');
     });
 
     it('file not found — returns {}', async () => {

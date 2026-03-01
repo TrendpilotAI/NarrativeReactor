@@ -53,8 +53,10 @@ export function encryptToken(plaintext: string): string {
 /**
  * Decrypt an encrypted token string. Handles both encrypted and legacy plaintext tokens.
  * If the value doesn't start with the encryption prefix, it's returned as-is (legacy plaintext).
+ * Returns empty string for null/undefined (missing optional tokens).
  */
-export function decryptToken(value: string): string {
+export function decryptToken(value: string | undefined | null): string {
+  if (!value) return '';
   // Legacy plaintext token — not encrypted
   if (!value.startsWith(PREFIX)) {
     return value;
