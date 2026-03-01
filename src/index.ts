@@ -14,6 +14,7 @@ import pipelineRoutes from './routes/pipeline';
 import webhookRoutes from './routes/webhooks';
 import { getCostSummary } from './services/costTracker';
 import { startScheduler } from './services/schedulerWorker';
+import { loginGet, loginPost, logout, requireDashboardAuth } from './middleware/dashboardAuth';
 
 // Validate required env vars at startup — throws in production if missing
 validateEnv();
@@ -45,6 +46,7 @@ app.use(cors(corsOptions));
 
 // Body parsing
 app.use(express.json());
+app.use(express.urlencoded({ extended: false }));
 
 // Rate limiting: 100 requests per 15 minutes per IP
 const limiter = rateLimit({
@@ -73,13 +75,21 @@ app.get('/api/costs', apiKeyAuth, (_req, res) => {
 // Webhook routes (no API key auth — uses webhook secret)
 app.use('/webhooks', webhookRoutes);
 
-// Static dashboard
-app.use(express.static(path.join(__dirname, '..', 'public')));
-
 // Health check — exempt from auth, safe for monitoring
 app.get('/health', (_req, res) => {
     res.json({ status: 'ok', service: 'NarrativeReactor', timestamp: new Date().toISOString() });
 });
+
+// Dashboard auth routes
+app.get('/login', loginGet);
+app.post('/login', loginPost);
+app.get('/logout', logout);
+
+// Dashboard auth middleware — protects static files (skips /api, /health, /login, /webhooks)
+app.use(requireDashboardAuth);
+
+// Static dashboard (now behind auth)
+app.use(express.static(path.join(__dirname, '..', 'public')));
 
 // Start Express server
 const PORT = parseInt(process.env.NR_PORT || '3401', 10);
