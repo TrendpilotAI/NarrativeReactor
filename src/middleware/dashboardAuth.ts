@@ -136,8 +136,8 @@ export function logout(_req: Request, res: Response): void {
  */
 export function requireDashboardAuth(req: Request, res: Response, next: NextFunction): void {
   // Paths that don't need dashboard auth
-  const publicPaths = ['/login', '/logout', '/health', '/favicon.ico'];
-  const publicPrefixes = ['/api/', '/webhooks/'];
+  const publicPaths = ['/login', '/logout', '/health', '/favicon.ico', '/auth/me'];
+  const publicPrefixes = ['/api/', '/webhooks/', '/docs'];
 
   if (publicPaths.includes(req.path)) return next();
   if (publicPrefixes.some(p => req.path.startsWith(p))) return next();

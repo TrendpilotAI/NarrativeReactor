@@ -91,6 +91,21 @@ app.get('/login', loginGet);
 app.post('/login', loginPost);
 app.get('/logout', logout);
 
+// Session check for React dashboard — returns 200 if valid session, 401 otherwise
+app.get('/auth/me', (req, res) => {
+    const { verifyJwt } = require('./lib/jwt');
+    const cookieHeader = req.headers.cookie || '';
+    const match = cookieHeader.match(/nr_session=([^;]+)/);
+    const token = match?.[1];
+    if (!token) { res.status(401).json({ error: 'Not authenticated' }); return; }
+    try {
+        const payload = verifyJwt(token);
+        res.json({ authenticated: true, user: payload.sub });
+    } catch {
+        res.status(401).json({ error: 'Session expired' });
+    }
+});
+
 // Dashboard auth middleware — protects static files (skips /api, /health, /login, /webhooks)
 app.use(requireDashboardAuth);
 

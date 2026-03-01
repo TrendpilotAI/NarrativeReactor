@@ -1,15 +1,21 @@
-const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:3401';
+const API_BASE = import.meta.env.VITE_API_URL || '';
 
 async function apiFetch(path: string, options: RequestInit = {}) {
   const apiKey = import.meta.env.VITE_API_KEY || '';
   const res = await fetch(`${API_BASE}${path}`, {
     ...options,
+    credentials: 'include', // Send session cookie
     headers: {
       'Content-Type': 'application/json',
       ...(apiKey ? { 'x-api-key': apiKey } : {}),
       ...options.headers,
     },
   });
+  if (res.status === 401) {
+    // Session expired — reload to trigger login
+    window.location.href = '/login';
+    throw new Error('Session expired');
+  }
   if (!res.ok) {
     const err = await res.json().catch(() => ({ error: res.statusText }));
     throw new Error(err.error || res.statusText);
