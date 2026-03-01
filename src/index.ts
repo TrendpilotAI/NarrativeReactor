@@ -17,6 +17,7 @@ import { startScheduler } from './services/schedulerWorker';
 import { loginGet, loginPost, logout, requireDashboardAuth } from './middleware/dashboardAuth';
 import { globalErrorHandler } from './middleware/errorHandler';
 import { captureException, isConfigured as sentryConfigured } from './lib/errorReporter';
+import docsRouter from './openapi';
 
 // Validate required env vars at startup — throws in production if missing
 validateEnv();
@@ -81,6 +82,9 @@ app.use('/webhooks', webhookRoutes);
 app.get('/health', (_req, res) => {
     res.json({ status: 'ok', service: 'NarrativeReactor', timestamp: new Date().toISOString() });
 });
+
+// API documentation — Swagger UI at /docs, spec at /docs/openapi.json
+app.use('/docs', docsRouter);
 
 // Dashboard auth routes
 app.get('/login', loginGet);
