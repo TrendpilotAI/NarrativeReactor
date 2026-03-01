@@ -3,6 +3,7 @@ import crypto from 'crypto';
 import dayjs from 'dayjs';
 import fs from 'fs/promises';
 import path from 'path';
+import { encryptToken, decryptToken } from './tokenEncryption';
 
 export interface AuthTokenDetails {
     id: string;
@@ -372,14 +373,43 @@ export class LinkedInProvider implements SocialProvider {
 // Integration Store (Simple File-based for Phase 1)
 const INTEGRATIONS_PATH = path.join(process.cwd(), 'data', 'integrations.json');
 
+/**
+ * Save an integration with encrypted tokens at rest.
+ * Access tokens and refresh tokens are encrypted via AES-256-GCM before writing to disk.
+ */
 export async function saveIntegration(provider: string, details: AuthTokenDetails) {
-    const integrations = await loadIntegrations();
-    integrations[provider] = details;
+    const integrations = await loadIntegrationsRaw();
+    // Encrypt sensitive tokens before persisting
+    const encrypted: AuthTokenDetails = {
+        ...details,
+        accessToken: encryptToken(details.accessToken),
+        refreshToken: details.refreshToken ? encryptToken(details.refreshToken) : undefined,
+    };
+    integrations[provider] = encrypted;
     await fs.mkdir(path.dirname(INTEGRATIONS_PATH), { recursive: true });
     await fs.writeFile(INTEGRATIONS_PATH, JSON.stringify(integrations, null, 2));
 }
 
-export async function loadIntegrations() {
+/**
+ * Load integrations with tokens decrypted for use.
+ * Handles both encrypted and legacy plaintext tokens transparently.
+ */
+export async function loadIntegrations(): Promise<Record<string, AuthTokenDetails>> {
+    const raw = await loadIntegrationsRaw();
+    // Decrypt tokens for use
+    const decrypted: Record<string, AuthTokenDetails> = {};
+    for (const [provider, details] of Object.entries(raw) as [string, AuthTokenDetails][]) {
+        decrypted[provider] = {
+            ...details,
+            accessToken: decryptToken(details.accessToken),
+            refreshToken: details.refreshToken ? decryptToken(details.refreshToken) : undefined,
+        };
+    }
+    return decrypted;
+}
+
+/** Load raw integrations from disk (tokens may be encrypted). */
+async function loadIntegrationsRaw(): Promise<Record<string, AuthTokenDetails>> {
     try {
         const data = await fs.readFile(INTEGRATIONS_PATH, 'utf-8');
         return JSON.parse(data);
