@@ -15,6 +15,8 @@ import webhookRoutes from './routes/webhooks';
 import { getCostSummary } from './services/costTracker';
 import { startScheduler } from './services/schedulerWorker';
 import { loginGet, loginPost, logout, requireDashboardAuth } from './middleware/dashboardAuth';
+import { globalErrorHandler } from './middleware/errorHandler';
+import { captureException, isConfigured as sentryConfigured } from './lib/errorReporter';
 
 // Validate required env vars at startup — throws in production if missing
 validateEnv();
@@ -91,10 +93,29 @@ app.use(requireDashboardAuth);
 // Static dashboard (now behind auth)
 app.use(express.static(path.join(__dirname, '..', 'public')));
 
+// Global error handler (must be after all routes)
+app.use(globalErrorHandler);
+
+// Catch unhandled rejections and uncaught exceptions
+process.on('unhandledRejection', (reason) => {
+    const err = reason instanceof Error ? reason : new Error(String(reason));
+    captureException(err, { type: 'unhandledRejection' });
+});
+process.on('uncaughtException', (err) => {
+    captureException(err, { type: 'uncaughtException' });
+    // Give Sentry time to flush before exit
+    setTimeout(() => process.exit(1), 2000);
+});
+
 // Start Express server
 const PORT = parseInt(process.env.NR_PORT || '3401', 10);
 app.listen(PORT, () => {
     console.log(`NarrativeReactor API server running on port ${PORT}`);
+    if (sentryConfigured()) {
+        console.log('[sentry] Error reporting enabled');
+    } else {
+        console.warn('[sentry] SENTRY_DSN not set — error reporting disabled');
+    }
 });
 
 // Also start Genkit flow server on a separate port for dev UI
