@@ -1,5 +1,4 @@
-import { generate } from '@genkit-ai/ai';
-import { gemini15Flash } from '@genkit-ai/google-genai';
+import { ai } from '../genkit.config.js';
 import { generateSpeech, VOICE_PROFILES, TTSResult } from './tts';
 
 export type PodcastStyle = 'interview' | 'monologue' | 'panel_discussion' | 'story';
@@ -69,8 +68,8 @@ Return a JSON object with this exact structure:
 
 Generate 4-6 segments. Each segment should be 2-4 sentences. Return ONLY valid JSON, no markdown.`;
 
-  const result = await generate({
-    model: gemini15Flash,
+  const result = await ai.generate({
+    model: 'googleai/gemini-1.5-flash',
     prompt,
     config: { temperature: 0.8 },
   });

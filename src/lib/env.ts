@@ -7,6 +7,9 @@
 
 const REQUIRED_VARS: string[] = ['API_KEY'];
 
+// Billing vars — warn if missing (not hard-fail in dev, since billing may be optional locally)
+const BILLING_VARS: string[] = ['STRIPE_SECRET_KEY', 'STRIPE_WEBHOOK_SECRET', 'STRIPE_PRICE_STARTER', 'STRIPE_PRICE_PRO'];
+
 export function validateEnv(): void {
     const isProduction = process.env.NODE_ENV === 'production';
     const missing = REQUIRED_VARS.filter((v) => !process.env[v]);
@@ -23,4 +26,12 @@ export function validateEnv(): void {
     console.warn('⚠️  [env] WARNING — ' + msg);
     console.warn('⚠️  [env] Continuing in development mode, but this WILL fail in production.');
     console.warn('');
+}
+
+// Non-fatal billing env check — runs on startup, warns but never throws
+export function validateBillingEnv(): void {
+    const missing = BILLING_VARS.filter((v) => !process.env[v]);
+    if (missing.length > 0) {
+        console.warn(`⚠️  [billing] Missing Stripe env vars: ${missing.join(', ')} — billing features will be unavailable.`);
+    }
 }

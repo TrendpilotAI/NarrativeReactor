@@ -2,7 +2,7 @@ import express from 'express';
 import cors from 'cors';
 import path from 'path';
 import rateLimit from 'express-rate-limit';
-import { validateEnv } from './lib/env';
+import { validateEnv, validateBillingEnv } from './lib/env';
 import { generateContentFlow } from './flows/content-generation';
 import { verifyBrandCompliance } from './flows/compliance';
 import { videoGenerationFlow, agenticChatFlow } from './flows/orchestration';
@@ -18,9 +18,11 @@ import { loginGet, loginPost, logout, requireDashboardAuth } from './middleware/
 import { globalErrorHandler } from './middleware/errorHandler';
 import { captureException, isConfigured as sentryConfigured } from './lib/errorReporter';
 import docsRouter from './openapi';
+import { billingRouter, stripeWebhookRouter } from './routes/billing';
 
 // Validate required env vars at startup — throws in production if missing
 validateEnv();
+validateBillingEnv();
 
 const app = express();
 
@@ -77,6 +79,12 @@ app.get('/api/costs', apiKeyAuth, (_req, res) => {
 
 // Webhook routes (no API key auth — uses webhook secret)
 app.use('/webhooks', webhookRoutes);
+
+// Stripe webhook — raw body required (must be before global json parser scope)
+app.use('/webhooks', stripeWebhookRouter);
+
+// Billing API — plan listing is public; checkout/usage require tenant API key
+app.use('/api/billing', billingRouter);
 
 // Health check — exempt from auth, safe for monitoring
 app.get('/health', (_req, res) => {
