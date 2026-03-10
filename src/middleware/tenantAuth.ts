@@ -161,42 +161,4 @@ export function quotaGuard(req: Request, res: Response, next: NextFunction): voi
   next();
 }
 
-// ---------------------------------------------------------------------------
-// smartAuth — combined tenant + admin key auth with quota enforcement
-// Validates X-API-Key as tenant key first; falls back to admin API_KEY bypass.
-// ---------------------------------------------------------------------------
 
-export function smartAuth(req: Request, res: Response, next: NextFunction): void {
-  const rawKey = req.headers['x-api-key'] as string | undefined;
-
-  if (rawKey) {
-    const tenant = validateApiKey(rawKey);
-    if (tenant) {
-      req.tenant = tenant;
-      if (!checkQuota(tenant)) {
-        res.status(429).json({
-          error: 'Quota exceeded',
-          code: 'QUOTA_EXCEEDED',
-          plan: tenant.plan,
-          quota_tokens: tenant.quota_tokens,
-          used_tokens: tenant.used_tokens,
-          remaining_tokens: remainingTokens(tenant),
-          reset_at: tenant.reset_at,
-          upgrade_url: `${process.env.APP_URL ?? 'https://narrativereactor.ai'}/billing/upgrade`,
-        });
-        return;
-      }
-      res.setHeader('X-RateLimit-Quota', tenant.quota_tokens);
-      res.setHeader('X-RateLimit-Remaining', remainingTokens(tenant));
-      res.setHeader('X-RateLimit-Reset', tenant.reset_at);
-      return next();
-    }
-  }
-
-  const adminKey = process.env.API_KEY;
-  if (adminKey && rawKey === adminKey) {
-    return next();
-  }
-
-  res.status(401).json({ error: 'Invalid or missing API key' });
-}
