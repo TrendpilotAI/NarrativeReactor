@@ -13,8 +13,9 @@
  * POST /webhooks/stripe            — Stripe webhook endpoint
  */
 
-import { Router, Request, Response } from 'express';
+import { Router, Request, Response, NextFunction } from 'express';
 import express from 'express';
+import { asyncHandler } from '../middleware/asyncHandler';
 import {
   createCheckoutSession,
   createPortalSession,
@@ -86,38 +87,32 @@ billingRouter.get('/plans', (_req: Request, res: Response) => {
 // Checkout — create Stripe Checkout session
 // ---------------------------------------------------------------------------
 
-billingRouter.post('/checkout', tenantAuth, async (req: Request, res: Response) => {
-  try {
-    const { plan } = req.body as { plan?: string };
-    if (!plan || !['starter', 'pro'].includes(plan)) {
-      res.status(400).json({ error: 'Invalid plan. Valid options: starter, pro' });
-      return;
-    }
-
-    const tenant = req.tenant!;
-    const appUrl = process.env.APP_URL ?? 'https://narrativereactor.ai';
-
-    const session = await createCheckoutSession({
-      tenantId: tenant.id,
-      plan: plan as 'starter' | 'pro',
-      successUrl: `${appUrl}/billing/success?session_id={CHECKOUT_SESSION_ID}`,
-      cancelUrl: `${appUrl}/billing/upgrade`,
-      tenantEmail: tenant.email,
-    });
-
-    res.json({ url: session.url, session_id: session.id });
-  } catch (err: unknown) {
-    const msg = err instanceof Error ? err.message : String(err);
-    console.error('[billing] checkout error:', msg);
-    res.status(500).json({ error: msg });
+billingRouter.post('/checkout', tenantAuth, asyncHandler(async (req: Request, res: Response) => {
+  const { plan } = req.body as { plan?: string };
+  if (!plan || !['starter', 'pro'].includes(plan)) {
+    res.status(400).json({ error: 'Invalid plan. Valid options: starter, pro' });
+    return;
   }
-});
+
+  const tenant = req.tenant!;
+  const appUrl = process.env.APP_URL ?? 'https://narrativereactor.ai';
+
+  const session = await createCheckoutSession({
+    tenantId: tenant.id,
+    plan: plan as 'starter' | 'pro',
+    successUrl: `${appUrl}/billing/success?session_id={CHECKOUT_SESSION_ID}`,
+    cancelUrl: `${appUrl}/billing/upgrade`,
+    tenantEmail: tenant.email,
+  });
+
+  res.json({ url: session.url, session_id: session.id });
+}));
 
 // ---------------------------------------------------------------------------
 // Customer Portal — manage existing subscription
 // ---------------------------------------------------------------------------
 
-billingRouter.post('/portal', tenantAuth, async (req: Request, res: Response) => {
+billingRouter.post('/portal', tenantAuth, asyncHandler(async (req: Request, res: Response) => {
   const tenant = req.tenant!;
 
   if (!tenant.stripe_customer_id) {
@@ -125,15 +120,10 @@ billingRouter.post('/portal', tenantAuth, async (req: Request, res: Response) =>
     return;
   }
 
-  try {
-    const appUrl = process.env.APP_URL ?? 'https://narrativereactor.ai';
-    const portalSession = await createPortalSession(tenant.stripe_customer_id, `${appUrl}/billing`);
-    res.json({ url: portalSession.url });
-  } catch (err: unknown) {
-    const msg = err instanceof Error ? err.message : String(err);
-    res.status(500).json({ error: msg });
-  }
-});
+  const appUrl = process.env.APP_URL ?? 'https://narrativereactor.ai';
+  const portalSession = await createPortalSession(tenant.stripe_customer_id, `${appUrl}/billing`);
+  res.json({ url: portalSession.url });
+}));
 
 // ---------------------------------------------------------------------------
 // Enterprise contact
@@ -171,24 +161,19 @@ billingRouter.get('/usage', tenantAuth, (req: Request, res: Response) => {
 // ---------------------------------------------------------------------------
 
 // Create tenant
-billingRouter.post('/tenants', apiKeyAuth, (req: Request, res: Response) => {
+billingRouter.post('/tenants', apiKeyAuth, asyncHandler(async (req: Request, res: Response) => {
   const { name, email, plan } = req.body;
   if (!name || !email) {
     res.status(400).json({ error: 'name and email are required' });
     return;
   }
-  try {
-    const { tenant, rawApiKey } = createTenant({ name, email, plan });
-    res.status(201).json({
-      tenant,
-      api_key: rawApiKey,
-      warning: 'Store this API key — it will not be shown again.',
-    });
-  } catch (err: unknown) {
-    const msg = err instanceof Error ? err.message : String(err);
-    res.status(400).json({ error: msg });
-  }
-});
+  const { tenant, rawApiKey } = createTenant({ name, email, plan });
+  res.status(201).json({
+    tenant,
+    api_key: rawApiKey,
+    warning: 'Store this API key — it will not be shown again.',
+  });
+}));
 
 // List all tenants
 billingRouter.get('/tenants', apiKeyAuth, (_req: Request, res: Response) => {
@@ -207,18 +192,13 @@ billingRouter.get('/tenants/:id/usage', apiKeyAuth, (req: Request, res: Response
 });
 
 // Rotate API key
-billingRouter.post('/tenants/:id/rotate-key', apiKeyAuth, (req: Request, res: Response) => {
-  try {
-    const newKey = rotateApiKey(req.params.id);
-    res.json({
-      api_key: newKey,
-      warning: 'Previous API key is now invalid. Store this new key — it will not be shown again.',
-    });
-  } catch (err: unknown) {
-    const msg = err instanceof Error ? err.message : String(err);
-    res.status(500).json({ error: msg });
-  }
-});
+billingRouter.post('/tenants/:id/rotate-key', apiKeyAuth, asyncHandler(async (req: Request, res: Response) => {
+  const newKey = rotateApiKey(req.params.id);
+  res.json({
+    api_key: newKey,
+    warning: 'Previous API key is now invalid. Store this new key — it will not be shown again.',
+  });
+}));
 
 // ---------------------------------------------------------------------------
 // Stripe webhook (raw body required — must be mounted separately)
@@ -227,20 +207,14 @@ billingRouter.post('/tenants/:id/rotate-key', apiKeyAuth, (req: Request, res: Re
 stripeWebhookRouter.post(
   '/stripe',
   express.raw({ type: 'application/json' }),
-  async (req: Request, res: Response) => {
+  asyncHandler(async (req: Request, res: Response) => {
     const sig = req.headers['stripe-signature'] as string;
     if (!sig) {
       res.status(400).json({ error: 'Missing stripe-signature header' });
       return;
     }
 
-    try {
-      const result = await handleWebhook(req.body as Buffer, sig);
-      res.json({ received: true, ...result });
-    } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : String(err);
-      console.error('[billing] webhook error:', msg);
-      res.status(400).json({ error: msg });
-    }
-  },
+    const result = await handleWebhook(req.body as Buffer, sig);
+    res.json({ received: true, ...result });
+  }),
 );

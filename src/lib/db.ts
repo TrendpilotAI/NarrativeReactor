@@ -100,6 +100,39 @@ const MIGRATIONS: Array<{ version: number; up: string }> = [
       );
     `,
   },
+  {
+    version: 2,
+    up: `
+      -- Performance indexes for frequently queried columns (NR-009)
+      -- Note: idx_tenants_api_key_hash already created in tenants.ts initTenantsDb()
+
+      -- Index on content_drafts.status for efficient status filtering
+      CREATE INDEX IF NOT EXISTS idx_content_drafts_status ON content_drafts(status);
+
+      -- Add tenant_id to content_drafts for multi-tenant scoping
+      ALTER TABLE content_drafts ADD COLUMN tenant_id TEXT;
+      CREATE INDEX IF NOT EXISTS idx_content_drafts_tenant_id ON content_drafts(tenant_id);
+
+      -- Add tenant_id to campaigns for multi-tenant scoping
+      ALTER TABLE campaigns ADD COLUMN tenant_id TEXT;
+      CREATE INDEX IF NOT EXISTS idx_campaigns_tenant_id ON campaigns(tenant_id);
+
+      -- Scheduled posts table (platform-level post scheduling)
+      CREATE TABLE IF NOT EXISTS scheduled_posts (
+        id           TEXT PRIMARY KEY,
+        tenant_id    TEXT,
+        draft_id     TEXT,
+        platform     TEXT NOT NULL,
+        scheduled_at TEXT NOT NULL,
+        status       TEXT NOT NULL DEFAULT 'pending',
+        payload      TEXT,
+        created_at   TEXT NOT NULL DEFAULT (datetime('now')),
+        updated_at   TEXT NOT NULL DEFAULT (datetime('now'))
+      );
+      CREATE INDEX IF NOT EXISTS idx_scheduled_posts_scheduled_at ON scheduled_posts(scheduled_at);
+      CREATE INDEX IF NOT EXISTS idx_scheduled_posts_tenant_id    ON scheduled_posts(tenant_id);
+    `,
+  },
 ];
 
 function runMigrations(db: DatabaseSync): void {
