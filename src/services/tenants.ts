@@ -1,12 +1,12 @@
 /**
  * Tenant management service — SQLite-backed multi-tenant API key & quota tracking.
  * Tables: tenants, tenant_usage_log
+ *
+ * Uses the shared node:sqlite singleton from src/lib/db.ts (NOT better-sqlite3).
  */
 
-import Database from 'better-sqlite3';
 import crypto from 'crypto';
-import path from 'path';
-import fs from 'fs';
+import { getDb } from '../lib/db';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -60,30 +60,18 @@ export const PLAN_PRICES_USD: Record<Plan, number> = {
 };
 
 // ---------------------------------------------------------------------------
-// DB setup
+// Scrypt configuration
 // ---------------------------------------------------------------------------
 
-const DATA_DIR = path.resolve(process.cwd(), 'data');
-const DB_PATH = path.join(DATA_DIR, 'tenants.db');
+/** Salt for scrypt key hashing — stable across process restarts via env var */
+const SCRYPT_SALT = Buffer.from(process.env.SCRYPT_SALT ?? 'narrativereactor_v2_salt');
 
-function ensureDataDir(): void {
-  if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR, { recursive: true });
-}
+// ---------------------------------------------------------------------------
+// Schema initialisation (runs once at module load via the shared db singleton)
+// ---------------------------------------------------------------------------
 
-let _db: Database.Database | null = null;
-
-export function getDb(): Database.Database {
-  if (_db) return _db;
-  ensureDataDir();
-  _db = new Database(DB_PATH);
-  _db.pragma('journal_mode = WAL');
-  _db.pragma('foreign_keys = ON');
-  initSchema(_db);
-  return _db;
-}
-
-function initSchema(db: Database.Database): void {
-  db.exec(`
+function initSchema(): void {
+  getDb().exec(`
     CREATE TABLE IF NOT EXISTS tenants (
       id                     TEXT PRIMARY KEY,
       name                   TEXT NOT NULL,
@@ -118,8 +106,11 @@ function initSchema(db: Database.Database): void {
   `);
 }
 
+// Initialise schema on module load (idempotent — uses CREATE IF NOT EXISTS)
+initSchema();
+
 // ---------------------------------------------------------------------------
-// Key generation
+// Key generation & hashing
 // ---------------------------------------------------------------------------
 
 /** Generate a raw API key, e.g. "nr_live_<32 hex chars>" */
@@ -128,8 +119,19 @@ export function generateApiKey(): string {
   return `nr_live_${raw}`;
 }
 
-/** SHA-256 hash of the raw key (stored in DB) */
+/**
+ * Hash an API key using scrypt (64-byte output → 128 hex chars).
+ * This is the canonical hash used for new keys and post-migration keys.
+ */
 export function hashApiKey(rawKey: string): string {
+  return crypto.scryptSync(rawKey, SCRYPT_SALT, 64).toString('hex');
+}
+
+/**
+ * Legacy SHA-256 hash (64 hex chars).
+ * Used only during the migration window to detect and upgrade old hashes.
+ */
+function hashApiKeySha256(rawKey: string): string {
   return crypto.createHash('sha256').update(rawKey).digest('hex');
 }
 
@@ -177,19 +179,46 @@ export function createTenant(input: CreateTenantInput): { tenant: Tenant; rawApi
     VALUES
       (@id, @name, @email, @plan, @stripe_customer_id, @stripe_subscription_id,
        @api_key_hash, @quota_tokens, @used_tokens, @reset_at, @active, @created_at, @updated_at)
-  `).run(tenant);
+  `).run(tenant as any);
 
   return { tenant, rawApiKey: rawKey };
 }
 
 /**
  * Validate a raw API key. Returns the tenant if valid and active, else null.
- * Also resets used_tokens if past reset_at.
+ *
+ * Migration window behaviour:
+ *   - Tries scrypt hash first (128 hex chars)
+ *   - If not found, falls back to SHA-256 (64 hex chars) for legacy tenants
+ *   - On SHA-256 match: transparently re-hashes to scrypt and updates the DB
+ *
+ * Also auto-resets used_tokens if past reset_at.
  */
 export function validateApiKey(rawKey: string): Tenant | null {
   const db = getDb();
-  const keyHash = hashApiKey(rawKey);
-  const tenant = db.prepare(`SELECT * FROM tenants WHERE api_key_hash = ? AND active = 1`).get(keyHash) as Tenant | undefined;
+
+  // 1. Try the new scrypt hash first
+  const scryptHash = hashApiKey(rawKey);
+  let tenant = db.prepare(
+    `SELECT * FROM tenants WHERE api_key_hash = ? AND active = 1`
+  ).get(scryptHash) as Tenant | undefined;
+
+  // 2. Legacy fallback: try SHA-256 (migration window)
+  if (!tenant) {
+    const sha256Hash = hashApiKeySha256(rawKey);
+    tenant = db.prepare(
+      `SELECT * FROM tenants WHERE api_key_hash = ? AND active = 1`
+    ).get(sha256Hash) as Tenant | undefined;
+
+    // Re-hash to scrypt on first auth (transparent migration)
+    if (tenant) {
+      const now = new Date().toISOString();
+      db.prepare(`UPDATE tenants SET api_key_hash = ?, updated_at = ? WHERE id = ?`)
+        .run(scryptHash, now, tenant.id);
+      tenant.api_key_hash = scryptHash;
+    }
+  }
+
   if (!tenant) return null;
 
   // Auto-reset monthly quota if past reset_at
@@ -286,7 +315,7 @@ export function getTenantById(id: string): Tenant | null {
  */
 export function listTenants(): Tenant[] {
   const db = getDb();
-  return db.prepare(`SELECT * FROM tenants ORDER BY created_at DESC`).all() as Tenant[];
+  return db.prepare(`SELECT * FROM tenants ORDER BY created_at DESC`).all() as unknown as Tenant[];
 }
 
 /**

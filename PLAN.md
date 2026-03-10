@@ -1,25 +1,58 @@
 # NarrativeReactor — Execution Plan
 
-> Refreshed: 2026-03-06 (Judge Agent v2)
-> Scores: revenue=8 · strategic=9 · completeness=8 · urgency=6 · effort_remaining=7
+> Refreshed: 2026-03-10 (Judge Agent v2)
+> Scores: revenue=8 · strategic=8 · completeness=8 · urgency=7 · effort_remaining=7
 
 ---
 
-## Architecture Overview of Proposed Changes
+## Current State Assessment
+
+```
+COMPLETED (last 3 sprints):
+  ✅ Multi-tenant Stripe billing (checkout/portal/webhooks/quota)
+  ✅ SQLite singleton (db.ts, WAL mode)
+  ✅ JWT sessions with exp claim (24h default)
+  ✅ React dashboard auth (login/logout/session)
+  ✅ GitHub Actions CI (typecheck + test + docker-build)
+  ✅ Docker + Railway deployment
+  ✅ OpenAPI/Swagger docs at /docs
+  ✅ Sentry error monitoring
+  ✅ Rate limiting (express-rate-limit)
+  ✅ AES-256-GCM token encryption
+  ✅ 287 tests passing
+
+STILL OPEN (critical):
+  ❌ SHA-256 API key hashing (→ scrypt)
+  ❌ helmet middleware (security headers)
+  ❌ tenants.ts bypasses db.ts singleton (uses better-sqlite3 directly)
+  ❌ Wildcard genkit dependencies (breaking change risk)
+  ❌ No ESLint in project root
+  ❌ No pino logger (console.log in production)
+  ❌ No SQLite indexes on hot columns
+  ❌ No true HTTP E2E tests (only mocked unit tests)
+  ❌ No content generation caching
+  ❌ Synchronous video generation (blocks HTTP thread)
+```
+
+---
+
+## Architecture Overview
 
 ```
 Current:
-  Express → API Routes → 32 Services → SQLite (per-service connections)
-                      → Genkit Flows → AI APIs (no caching)
-                      → Blotato → Social Platforms
+  Express → [cors] → [rate-limit] → [apiKeyAuth | smartAuth] → Routes
+         → SQLite (two connections! db.ts + tenants.ts own connection)
+         → Genkit Flows → AI APIs (no caching)
+         → Blotato → Social Platforms
+         → Fal.ai → Video (synchronous, blocking)
 
-Proposed:
-  Express → [helmet] → [tenant quota guard] → API Routes
-         → Stripe Billing Layer → Tenant Management
-         → Genkit Flows → [LRU cache] → AI APIs
-         → Engagement Tracker ← Blotato webhooks
-         → Video Job Queue → Background Worker → Fal.ai
-         → src/lib/db.ts (singleton) → all services
+Proposed (after this plan):
+  Express → [helmet] → [cors] → [rate-limit] → [smartAuth (scrypt verify)] → Routes
+         → SQLite (single WAL singleton — all services use getDb())
+         → Genkit Flows → [LRU cache 5min] → AI APIs
+         → Blotato → Social Platforms
+         → Video Job Queue → Worker (async polling)
+         → pino structured logger → stdout (Railway log drain)
 ```
 
 ---
@@ -27,53 +60,58 @@ Proposed:
 ## Dependency Graph
 
 ```
-TODO-632 (DB singleton)
-  └─ TODO-633 (video job queue) depends on 632
-  └─ TODO-630 (billing) depends on 632
+TODO-880 (DB singleton fix — tenants.ts → db.ts)
+  └─ TODO-878 (scrypt hashing — needs db.ts migration for api_key_hash_v2)
+  └─ TODO-883 (supertest E2E — needs clean DB isolation via db.ts)
+  └─ TODO-885 (video queue — needs video_jobs table in db.ts)
 
-TODO-597 (JWT expiry) — standalone
-TODO-598 (helmet) — standalone
-TODO-599 (pino logging)
-  └─ TODO-630 (billing) benefits from 599
-  └─ TODO-631 (feedback loop) benefits from 599
+TODO-879 (helmet) — standalone, 30min
+TODO-881 (pin genkit deps) — standalone, 30min
+TODO-882 (ESLint root) — standalone, 1h
 
-TODO-600 (SQLite indexes) — merge into 632
-TODO-601 (E2E supertest tests) — standalone
-TODO-602 (content repurposing pipeline) — standalone
-TODO-603 (LRU response cache) — standalone
-TODO-604 (pin wildcard genkit deps) — standalone
-
-TODO-630 (Stripe billing) — P0 revenue unlock
-TODO-631 (performance feedback loop) — P1 stickiness
-TODO-633 (video job queue) — P2 performance
+TODO-883 (supertest E2E) — after TODO-880
+TODO-884 (LRU content cache) — standalone
+TODO-885 (video job queue) — after TODO-880
 ```
 
 ---
 
 ## Recommended Execution Order
 
-### Sprint 1 — Security & Foundation (Week 1)
-| TODO | Task | Effort |
-|------|------|--------|
-| 597 | JWT session expiry (`exp` claim) | 30m |
-| 598 | `helmet` middleware | 1h |
-| 604 | Pin wildcard genkit deps | 30m |
-| 632 | SQLite DB singleton + WAL + indexes | 2h |
-| 599 | Pino structured logger | 2h |
+### Sprint 1 — Security & Stability Foundation (Day 1-2)
 
-### Sprint 2 — Quality & Coverage (Week 1-2)
-| TODO | Task | Effort |
-|------|------|--------|
-| 601 | E2E supertest tests for all route groups | 2d |
-| 602 | Content repurposing pipeline | 1.5d |
-| 603 | LRU cache for content generation | 2h |
+| TODO | Task | Effort | Blocked By |
+|------|------|--------|-----------|
+| 881 | Pin wildcard genkit deps | 30m | None |
+| 879 | helmet middleware | 30m | None |
+| 880 | Fix tenants.ts → db.ts singleton | 2h | None |
+| 878 | scrypt API key hashing + migration | 3h | 880 |
+| 882 | ESLint root config | 1h | None |
 
-### Sprint 3 — Revenue & Performance (Week 2-3)
-| TODO | Task | Effort |
-|------|------|--------|
-| 630 | Stripe multi-tenant billing layer | 5d |
-| 633 | Async video job queue | 1d |
-| 631 | Content performance feedback loop | 3d |
+### Sprint 2 — Quality & Coverage (Day 3-5)
+
+| TODO | Task | Effort | Blocked By |
+|------|------|--------|-----------|
+| 599 | pino structured logger | 2h | None |
+| 600 | SQLite indexes migration | 1h | 880 |
+| 883 | True supertest E2E tests | 2d | 880 |
+| 602 | Content repurposing pipeline | 1.5d | None |
+
+### Sprint 3 — Performance (Day 6-8)
+
+| TODO | Task | Effort | Blocked By |
+|------|------|--------|-----------|
+| 884 | LRU cache for content generation | 2h | None |
+| 885 | Async video job queue | 1d | 880 |
+| 603 | Pagination middleware | 3h | None |
+
+### Sprint 4 — Revenue Features (Day 9+)
+
+| TODO | Task | Effort | Blocked By |
+|------|------|--------|-----------|
+| 631 | Content performance feedback loop | 3d | None |
+| API key rotation UI | 1d | None |
+| Slack notifications | 1d | None |
 
 ---
 
@@ -81,34 +119,44 @@ TODO-633 (video job queue) — P2 performance
 
 | Risk | Likelihood | Impact | Mitigation |
 |------|-----------|--------|-----------|
-| Stripe integration complexity | Medium | High | Use Stripe Checkout (hosted page) to reduce scope |
-| SQLite singleton breaks services | Low | High | Run full test suite after TODO-632; canary deploy |
-| Genkit wildcard dep breaking change | High | Medium | Pin immediately (TODO-604) before next npm install |
-| Video queue SQLite lock contention | Low | Medium | Use WAL mode (included in TODO-632) |
-| E2E tests flaky on CI | Medium | Low | Use test database fixture; reset between tests |
+| scrypt migration breaks existing API keys | Medium | High | Keep SHA-256 verify as fallback; rehash on login |
+| tenants.ts migration causes data loss | Low | High | Test with copy of DB; run full test suite |
+| Genkit wildcard dep breaks on next install | High | Medium | Pin immediately (30min task) |
+| E2E tests conflict with production DB | Medium | Medium | Use `DATABASE_PATH=:memory:` for tests |
+| LRU cache returns stale content | Low | Low | Short TTL (5min), invalidate on brand update |
+| Video queue worker memory leak | Low | Medium | Limit concurrent jobs; add health check |
 
 ---
 
-## Current TODO Status
+## Open TODO Status
 
-### Open High-Priority Items
-- 597: JWT expiry — P0 security
-- 598: helmet headers — P0 security  
-- 599: pino logging — P1
-- 600: SQLite indexes — P1 (merge into 632)
-- 601: E2E supertest tests — P1
-- 602: content repurposing — P1
-- 630: Stripe billing — **P0 revenue**
-- 631: engagement feedback loop — P1
-- 632: DB singleton — P1 foundation
-- 633: video job queue — P2
+### P0 (Critical — do immediately)
+- 878: scrypt API key hashing ❌
+- 879: helmet middleware ❌  
+- 880: tenants.ts DB singleton fix ❌
+- 881: pin genkit deps ❌
 
-### Completed (last sprint)
-- ✅ GitHub Actions CI pipeline
-- ✅ React dashboard auth
-- ✅ Sentry error monitoring
-- ✅ OpenAPI/Swagger docs
-- ✅ Docker + Railway deployment
-- ✅ JWT + CORS + rate limiting
-- ✅ AES-256-GCM token encryption
-- ✅ 287 tests passing
+### P1 (High — this sprint)
+- 597: JWT session expiry ✅ ALREADY DONE (jwt.ts has exp=86400)
+- 599: pino logging ❌
+- 600: SQLite indexes ❌
+- 601 → 883: True supertest E2E ❌
+- 602: content repurposing ❌
+- 632: DB singleton ✅ ALREADY DONE (db.ts is singleton)
+- 882: ESLint root config ❌
+
+### P2 (Medium — next sprint)
+- 603: LRU cache → 884 ❌
+- 604: pin genkit deps → 881 ❌
+- 633 → 885: video job queue ❌
+- 631: engagement feedback loop ❌
+
+### Completed (from prior plan)
+- ✅ 630: Stripe billing layer
+- ✅ 322: Web UI auth
+- ✅ 321: Sentry error monitoring
+- ✅ 320: Test coverage
+- ✅ 318: OpenAPI/Swagger
+- ✅ 354: GitHub Actions CI
+- ✅ JWT exp claim (was in AUDIT as open but already implemented)
+- ✅ SQLite DB singleton (was in TODO-632 but already implemented in db.ts)

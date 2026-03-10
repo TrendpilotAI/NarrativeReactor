@@ -1,4 +1,5 @@
 import express from 'express';
+import helmet from 'helmet';
 import cors from 'cors';
 import path from 'path';
 import rateLimit from 'express-rate-limit';
@@ -26,6 +27,9 @@ validateEnv();
 validateBillingEnv();
 
 const app = express();
+
+// Security headers — helmet must be first middleware
+app.use(helmet({ contentSecurityPolicy: false }));
 
 // CORS — restrict to allowed origins in production; allow all in development
 const ALLOWED_ORIGINS = process.env.CORS_ALLOWED_ORIGINS
