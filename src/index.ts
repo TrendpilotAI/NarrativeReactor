@@ -9,6 +9,7 @@ import { videoGenerationFlow, agenticChatFlow } from './flows/orchestration';
 import { getAuthUrlFlow, connectSocialAccountFlow, listIntegrationsFlow, postToSocialFlow, getPerformanceDataFlow, getMentionsFlow } from './flows/integrations';
 import { startFlowServer } from '@genkit-ai/express';
 import { apiKeyAuth } from './middleware/auth';
+import { smartAuth } from './middleware/tenantAuth';
 import apiRoutes from './routes/index';
 import pipelineRoutes from './routes/pipeline';
 import webhookRoutes from './routes/webhooks';
@@ -70,7 +71,8 @@ app.use('/api', apiKeyAuth);
 app.use('/api', apiRoutes);
 
 // Content pipeline & Blotato publishing routes
-app.use('/api/pipeline', apiKeyAuth, pipelineRoutes);
+// Uses smartAuth: tenant API key (with quota enforcement) OR admin key (bypass)
+app.use('/api/pipeline', smartAuth, pipelineRoutes);
 
 // Cost tracking endpoint (behind auth)
 app.get('/api/costs', apiKeyAuth, (_req, res) => {

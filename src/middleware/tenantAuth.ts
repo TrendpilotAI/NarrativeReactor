@@ -21,6 +21,75 @@ declare global {
 }
 
 // ---------------------------------------------------------------------------
+// Smart Auth middleware — tenant key with quota OR admin API key fallback
+// ---------------------------------------------------------------------------
+
+/**
+ * smartAuth — dual-mode auth for pipeline routes:
+ *   1. If X-API-Key matches a tenant → enforce quota, set req.tenant
+ *   2. If X-API-Key matches process.env.API_KEY → admin bypass (no quota)
+ *   3. Otherwise → 401
+ *
+ * Usage:
+ *   app.use('/api/pipeline', smartAuth, pipelineRoutes);
+ */
+export function smartAuth(req: Request, res: Response, next: NextFunction): void {
+  const rawKey = req.headers['x-api-key'] as string | undefined;
+
+  if (rawKey) {
+    // Try tenant API key first
+    const tenant = validateApiKey(rawKey);
+    if (tenant) {
+      req.tenant = tenant;
+
+      // Enforce per-tenant quota
+      if (!checkQuota(tenant)) {
+        const remaining = remainingTokens(tenant);
+        const resetDate = new Date(tenant.reset_at).toLocaleDateString('en-US', {
+          year: 'numeric', month: 'long', day: 'numeric',
+        });
+
+        res.status(429).json({
+          error: 'Quota exceeded',
+          code: 'QUOTA_EXCEEDED',
+          plan: tenant.plan,
+          quota_tokens: tenant.quota_tokens,
+          used_tokens: tenant.used_tokens,
+          remaining_tokens: remaining,
+          reset_at: tenant.reset_at,
+          upgrade_url: `${process.env.APP_URL ?? 'https://narrativereactor.ai'}/billing/upgrade`,
+          message: [
+            `You've used all ${tenant.quota_tokens.toLocaleString()} tokens on the ${tenant.plan} plan.`,
+            `Your quota resets on ${resetDate}.`,
+            `Upgrade your plan to continue: ${process.env.APP_URL ?? 'https://narrativereactor.ai'}/billing/upgrade`,
+          ].join(' '),
+        });
+        return;
+      }
+
+      // Expose quota headers to client for awareness
+      res.setHeader('X-RateLimit-Quota', tenant.quota_tokens);
+      res.setHeader('X-RateLimit-Remaining', remainingTokens(tenant));
+      res.setHeader('X-RateLimit-Reset', tenant.reset_at);
+      next();
+      return;
+    }
+
+    // Fall back to admin API key (backward compatibility — no quota enforcement)
+    const adminKey = process.env.API_KEY;
+    if (adminKey && rawKey === adminKey) {
+      next();
+      return;
+    }
+  }
+
+  res.status(401).json({
+    error: 'Invalid or missing API key',
+    hint: 'Provide a valid NarrativeReactor tenant API key or admin key in the X-API-Key header.',
+  });
+}
+
+// ---------------------------------------------------------------------------
 // Auth middleware — validates X-API-Key header against tenant DB
 // ---------------------------------------------------------------------------
 
@@ -90,4 +159,44 @@ export function quotaGuard(req: Request, res: Response, next: NextFunction): voi
   res.setHeader('X-RateLimit-Reset', tenant.reset_at);
 
   next();
+}
+
+// ---------------------------------------------------------------------------
+// smartAuth — combined tenant + admin key auth with quota enforcement
+// Validates X-API-Key as tenant key first; falls back to admin API_KEY bypass.
+// ---------------------------------------------------------------------------
+
+export function smartAuth(req: Request, res: Response, next: NextFunction): void {
+  const rawKey = req.headers['x-api-key'] as string | undefined;
+
+  if (rawKey) {
+    const tenant = validateApiKey(rawKey);
+    if (tenant) {
+      req.tenant = tenant;
+      if (!checkQuota(tenant)) {
+        res.status(429).json({
+          error: 'Quota exceeded',
+          code: 'QUOTA_EXCEEDED',
+          plan: tenant.plan,
+          quota_tokens: tenant.quota_tokens,
+          used_tokens: tenant.used_tokens,
+          remaining_tokens: remainingTokens(tenant),
+          reset_at: tenant.reset_at,
+          upgrade_url: `${process.env.APP_URL ?? 'https://narrativereactor.ai'}/billing/upgrade`,
+        });
+        return;
+      }
+      res.setHeader('X-RateLimit-Quota', tenant.quota_tokens);
+      res.setHeader('X-RateLimit-Remaining', remainingTokens(tenant));
+      res.setHeader('X-RateLimit-Reset', tenant.reset_at);
+      return next();
+    }
+  }
+
+  const adminKey = process.env.API_KEY;
+  if (adminKey && rawKey === adminKey) {
+    return next();
+  }
+
+  res.status(401).json({ error: 'Invalid or missing API key' });
 }

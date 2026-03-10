@@ -21,6 +21,7 @@ import {
   listBlotatoAccounts,
 } from '../services/blotatoPublisher';
 import { BlotatoPlatform } from '../lib/blotato';
+import { incrementUsage } from '../services/tenants';
 
 const router = Router();
 
@@ -35,6 +36,14 @@ router.post('/generate', async (req: Request, res: Response) => {
       return;
     }
     const draft = await runContentPipeline({ topic, context, useClaude, brandGuidelines });
+
+    // Track token usage for tenant accounts (admin key bypasses quota — no tracking needed)
+    if (req.tenant) {
+      const totalChars = JSON.stringify(draft.formats).length;
+      const estimatedTokens = Math.max(500, Math.ceil(totalChars / 4));
+      incrementUsage(req.tenant.id, estimatedTokens, '/api/pipeline/generate', useClaude ? 'claude' : 'gemini');
+    }
+
     res.status(201).json(draft);
   } catch (err: any) {
     res.status(500).json({ error: err.message });
@@ -50,6 +59,14 @@ router.post('/research', async (req: Request, res: Response) => {
       return;
     }
     const research = await researchTopic(topic, context);
+
+    // Track token usage for tenant accounts
+    if (req.tenant) {
+      const totalChars = JSON.stringify(research).length;
+      const estimatedTokens = Math.max(200, Math.ceil(totalChars / 4));
+      incrementUsage(req.tenant.id, estimatedTokens, '/api/pipeline/research', 'gemini');
+    }
+
     res.json(research);
   } catch (err: any) {
     res.status(500).json({ error: err.message });
