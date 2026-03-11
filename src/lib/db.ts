@@ -133,6 +133,40 @@ const MIGRATIONS: Array<{ version: number; up: string }> = [
       CREATE INDEX IF NOT EXISTS idx_scheduled_posts_tenant_id    ON scheduled_posts(tenant_id);
     `,
   },
+  {
+    version: 3,
+    up: `
+      -- NR-009: Additional performance indexes
+
+      -- content_library table (previously file-based; migrated to SQLite for indexability)
+      CREATE TABLE IF NOT EXISTS content_library (
+        id           TEXT PRIMARY KEY,
+        brand_id     TEXT,
+        status       TEXT NOT NULL DEFAULT 'active',
+        scheduled_at TEXT,
+        content      TEXT NOT NULL,
+        metadata     TEXT NOT NULL DEFAULT '{}',  -- JSON
+        created_at   TEXT NOT NULL DEFAULT (datetime('now')),
+        updated_at   TEXT NOT NULL DEFAULT (datetime('now'))
+      );
+      CREATE INDEX IF NOT EXISTS idx_content_library_brand_id     ON content_library(brand_id);
+      CREATE INDEX IF NOT EXISTS idx_content_library_status       ON content_library(status);
+      CREATE INDEX IF NOT EXISTS idx_content_library_scheduled_at ON content_library(scheduled_at);
+
+      -- scheduled_posts: add brand_id column + indexes on brand_id and status
+      -- (scheduled_at and tenant_id indexes already exist from migration 2)
+      ALTER TABLE scheduled_posts ADD COLUMN brand_id TEXT;
+      CREATE INDEX IF NOT EXISTS idx_scheduled_posts_brand_id ON scheduled_posts(brand_id);
+      CREATE INDEX IF NOT EXISTS idx_scheduled_posts_status   ON scheduled_posts(status);
+
+      -- campaigns: add brand_id column + index
+      -- (tenant_id index already exists from migration 2)
+      ALTER TABLE campaigns ADD COLUMN brand_id TEXT;
+      CREATE INDEX IF NOT EXISTS idx_campaigns_brand_id ON campaigns(brand_id);
+
+      -- tenants.api_key_hash: already indexed in tenants.ts initSchema() — no-op here
+    `,
+  },
 ];
 
 function runMigrations(db: DatabaseSync): void {
