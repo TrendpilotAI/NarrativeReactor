@@ -12,11 +12,15 @@
  */
 
 import { Request, Response, NextFunction } from 'express';
-import { signJwt, verifyJwt } from '../lib/jwt';
+import { signJwt, verifyJwt, signRefreshToken, verifyRefreshToken } from '../lib/jwt';
 import crypto from 'crypto';
 
 const COOKIE_NAME = 'nr_session';
-const COOKIE_MAX_AGE_MS = 24 * 60 * 60 * 1000; // 24h
+const REFRESH_COOKIE_NAME = 'nr_refresh';
+const ACCESS_MAX_AGE_MS = 60 * 60 * 1000;      // 1h
+const REFRESH_MAX_AGE_MS = 7 * 24 * 60 * 60 * 1000; // 7d
+/** @deprecated Use ACCESS_MAX_AGE_MS */
+const COOKIE_MAX_AGE_MS = ACCESS_MAX_AGE_MS;
 
 function getPassword(): string | null {
   return process.env.DASHBOARD_PASSWORD || null;
@@ -83,13 +87,7 @@ export function loginPost(req: Request, res: Response): void {
       return;
     }
     // Dev: allow any password
-    const token = signJwt('dashboard-user');
-    res.cookie(COOKIE_NAME, token, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
-      maxAge: COOKIE_MAX_AGE_MS,
-    });
+    setSessionCookies(res, 'dashboard-user');
     res.redirect('/');
     return;
   }
@@ -111,14 +109,57 @@ export function loginPost(req: Request, res: Response): void {
     return;
   }
 
-  const token = signJwt('dashboard-user');
-  res.cookie(COOKIE_NAME, token, {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
-    sameSite: 'lax',
-    maxAge: COOKIE_MAX_AGE_MS,
-  });
+  setSessionCookies(res, 'dashboard-user');
   res.redirect('/');
+}
+
+/** Helper — set both access and refresh cookies. */
+function setSessionCookies(res: Response, subject: string): void {
+  const isProd = process.env.NODE_ENV === 'production';
+  const accessToken = signJwt(subject);
+  const refreshToken = signRefreshToken(subject);
+
+  const cookieBase = { httpOnly: true, secure: isProd, sameSite: 'lax' as const };
+  res.cookie(COOKIE_NAME, accessToken, { ...cookieBase, maxAge: ACCESS_MAX_AGE_MS });
+  res.cookie(REFRESH_COOKIE_NAME, refreshToken, { ...cookieBase, maxAge: REFRESH_MAX_AGE_MS });
+}
+
+/**
+ * Handle POST /auth/refresh — exchange a valid refresh token for a new access token.
+ *
+ * Reads the refresh token from the `nr_refresh` cookie or the `Authorization: Bearer <token>` header.
+ * Returns JSON `{ token }` with the new access token and sets a fresh `nr_session` cookie.
+ */
+export function refreshSession(req: Request, res: Response): void {
+  // Accept from cookie OR Authorization header (for API clients)
+  const cookieHeader = req.headers.cookie || '';
+  const cookieMatch = cookieHeader.match(new RegExp(`${REFRESH_COOKIE_NAME}=([^;]+)`));
+  const authHeader = req.headers.authorization?.startsWith('Bearer ') ? req.headers.authorization.slice(7) : undefined;
+  const refreshToken = cookieMatch?.[1] ?? authHeader;
+
+  if (!refreshToken) {
+    res.status(401).json({ error: 'Refresh token missing' });
+    return;
+  }
+
+  let payload: ReturnType<typeof verifyRefreshToken>;
+  try {
+    payload = verifyRefreshToken(refreshToken);
+  } catch (err: unknown) {
+    const msg = err instanceof Error ? err.message : 'Invalid refresh token';
+    res.status(401).json({ error: msg });
+    return;
+  }
+
+  const newAccessToken = signJwt(payload.sub);
+  const isProd = process.env.NODE_ENV === 'production';
+  res.cookie(COOKIE_NAME, newAccessToken, {
+    httpOnly: true,
+    secure: isProd,
+    sameSite: 'lax',
+    maxAge: ACCESS_MAX_AGE_MS,
+  });
+  res.json({ token: newAccessToken });
 }
 
 /**
@@ -126,6 +167,7 @@ export function loginPost(req: Request, res: Response): void {
  */
 export function logout(_req: Request, res: Response): void {
   res.clearCookie(COOKIE_NAME);
+  res.clearCookie(REFRESH_COOKIE_NAME);
   res.redirect('/login');
 }
 

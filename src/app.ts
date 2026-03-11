@@ -17,7 +17,7 @@ import apiRoutes from './routes/index';
 import pipelineRoutes from './routes/pipeline';
 import webhookRoutes from './routes/webhooks';
 import { getCostSummary } from './services/costTracker';
-import { loginGet, loginPost, logout, requireDashboardAuth } from './middleware/dashboardAuth';
+import { loginGet, loginPost, logout, refreshSession, requireDashboardAuth } from './middleware/dashboardAuth';
 import { globalErrorHandler } from './middleware/errorHandler';
 import docsRouter from './openapi';
 import { billingRouter, stripeWebhookRouter } from './routes/billing';
@@ -94,6 +94,7 @@ export function createApp(options: { rateLimitMax?: number; rateLimitWindowMs?: 
     app.get('/login', loginGet);
     app.post('/login', loginPost);
     app.get('/logout', logout);
+    app.post('/auth/refresh', refreshSession);
 
     // Session check for React dashboard
     app.get('/auth/me', (req, res) => {
