@@ -9,46 +9,45 @@
  * Stripe is mocked via vi.mock — no real network calls.
  */
 
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach, afterAll } from 'vitest';
 import fs from 'fs';
 import os from 'os';
 import path from 'path';
 
-// ── Isolate SQLite DB for billing tests ──────────────────────────────────────
+// ── Isolate SQLite DB and set env vars BEFORE modules are imported ────────────
+// vi.hoisted runs before vi.mock which runs before ESM imports
 
-const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'nr-billing-stripe-test-'));
-const dbPath = path.join(tmpDir, 'test.db');
-process.env.DATABASE_PATH = dbPath;
-process.env.STRIPE_SECRET_KEY = 'sk_test_mock';
-process.env.STRIPE_WEBHOOK_SECRET = 'whsec_test_mock';
-process.env.STRIPE_PRICE_STARTER = 'price_starter_mock';
-process.env.STRIPE_PRICE_PRO = 'price_pro_mock';
-process.env.SCRYPT_SALT = 'test_salt_billing_stripe';
+const { mockCheckoutSessionCreate, mockPortalSessionCreate, mockConstructEvent, tmpDir } = vi.hoisted(() => {
+  // Use require inside vi.hoisted since ESM imports aren't available yet
+  const _fs = require('fs') as typeof import('fs');
+  const _os = require('os') as typeof import('os');
+  const _path = require('path') as typeof import('path');
+  const dir = _fs.mkdtempSync(_path.join(_os.tmpdir(), 'nr-billing-stripe-test-'));
+  const dbPath = _path.join(dir, 'test.db');
+  // Set env vars here so they're captured at module-load time by billing.ts
+  process.env.DATABASE_PATH = dbPath;
+  process.env.STRIPE_SECRET_KEY = 'sk_test_mock';
+  process.env.STRIPE_WEBHOOK_SECRET = 'whsec_test_mock';
+  process.env.STRIPE_PRICE_STARTER = 'price_starter_mock';
+  process.env.STRIPE_PRICE_PRO = 'price_pro_mock';
+  process.env.SCRYPT_SALT = 'test_salt_billing_stripe';
+  return {
+    mockCheckoutSessionCreate: vi.fn(),
+    mockPortalSessionCreate: vi.fn(),
+    mockConstructEvent: vi.fn(),
+    tmpDir: dir,
+  };
+});
 
 // ── Mock Stripe SDK ───────────────────────────────────────────────────────────
 
-const mockCheckoutSessionCreate = vi.fn();
-const mockPortalSessionCreate = vi.fn();
-const mockConstructEvent = vi.fn();
-
 vi.mock('stripe', () => {
-  return {
-    default: vi.fn().mockImplementation(() => ({
-      checkout: {
-        sessions: {
-          create: mockCheckoutSessionCreate,
-        },
-      },
-      billingPortal: {
-        sessions: {
-          create: mockPortalSessionCreate,
-        },
-      },
-      webhooks: {
-        constructEvent: mockConstructEvent,
-      },
-    })),
-  };
+  class MockStripe {
+    checkout = { sessions: { create: mockCheckoutSessionCreate } };
+    billingPortal = { sessions: { create: mockPortalSessionCreate } };
+    webhooks = { constructEvent: mockConstructEvent };
+  }
+  return { default: MockStripe };
 });
 
 // Import after mocking
@@ -67,8 +66,13 @@ import {
 } from '../services/tenants';
 import { resetDb } from '../lib/db';
 
+// Clear mocks between tests but keep DB open (initSchema only runs at module load)
 afterEach(() => {
   vi.clearAllMocks();
+});
+
+// Cleanup DB and temp dir after all tests complete
+afterAll(() => {
   resetDb();
   try { fs.rmSync(tmpDir, { recursive: true, force: true }); } catch { /* ignore */ }
 });
@@ -124,8 +128,9 @@ describe('createCheckoutSession', () => {
   });
 
   it('throws when price ID is not configured', async () => {
-    const savedStarter = process.env.STRIPE_PRICE_STARTER;
-    delete process.env.STRIPE_PRICE_STARTER;
+    // PLAN_CONFIG.priceId is captured at module load time, so we manipulate it directly
+    const savedPriceId = PLAN_CONFIG.starter.priceId;
+    (PLAN_CONFIG.starter as any).priceId = undefined;
 
     try {
       await expect(
@@ -137,7 +142,7 @@ describe('createCheckoutSession', () => {
         })
       ).rejects.toThrow('STRIPE_PRICE_STARTER env var not set');
     } finally {
-      process.env.STRIPE_PRICE_STARTER = savedStarter;
+      (PLAN_CONFIG.starter as any).priceId = savedPriceId;
     }
   });
 

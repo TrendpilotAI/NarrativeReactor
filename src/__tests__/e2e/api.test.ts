@@ -91,6 +91,7 @@ vi.mock('../../middleware/dashboardAuth', () => ({
     loginPost: vi.fn((_req: unknown, res: { redirect: (s: string) => void }) => res.redirect('/')),
     logout: vi.fn((_req: unknown, res: { redirect: (s: string) => void }) => res.redirect('/login')),
     requireDashboardAuth: vi.fn((_req: unknown, _res: unknown, next: () => void) => next()),
+    refreshSession: vi.fn((_req: unknown, _res: unknown, next?: () => void) => { if (next) next(); }),
 }));
 
 // Mock scheduler so it doesn't start background jobs
