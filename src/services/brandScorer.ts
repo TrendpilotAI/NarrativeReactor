@@ -1,5 +1,5 @@
 import { getBrand, Brand } from './brandManager.js';
-import { analyzeContent, ToneMetrics, getProfilesByBrand } from './voiceCloner.js';
+import { analyzeContent, ToneMetrics } from './voiceCloner.js';
 
 export interface ScoreBreakdown {
   keywordScore: number;       // 0-100

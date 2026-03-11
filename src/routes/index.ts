@@ -6,7 +6,7 @@ import { postToSocialFlow, listIntegrationsFlow, getPerformanceDataFlow, getMent
 import { schedulePost, getSchedule, cancelPost } from '../services/calendar';
 import { publishToAll } from '../services/publisher';
 import { trackPost, getPostPerformance, getBestPerformingContent, getOptimalPostingTimes } from '../services/performanceTracker';
-import { saveContent, searchContent, getContentByTag, getContentStats, getContentById } from '../services/contentLibrary';
+import { saveContent, searchContent, getContentByTag, getContentStats } from '../services/contentLibrary';
 import { receiveMessage, getMessageLog, sendMessage, getRegisteredAgents } from '../services/agentComm';
 import { fetchTrendingTopics, generateBriefFromTrend, autoGenerateContent } from '../services/trendpilotBridge';
 import { createCampaign, getCampaign, listCampaigns, advanceCampaign, deleteCampaign } from '../services/campaigns';
@@ -19,7 +19,7 @@ import { getOptimalTimes, suggestNextPostTime } from '../services/postingOptimiz
 import { getDefaultPersonas, buildPersona } from '../services/audiencePersona';
 import { createVideoProject, generateStitchingScript, getProjectTimeline } from '../services/videoStitcher';
 import { generateSubtitles, generateVTT, embedSubtitles } from '../services/subtitles';
-import { getTemplate, customizeTemplate, listTemplates, TemplateType } from '../services/videoTemplates';
+import { getTemplate, listTemplates, TemplateType } from '../services/videoTemplates';
 import { generateThumbnail } from '../services/thumbnailGenerator';
 import { createBrand, getBrand, listBrands, updateBrand, deleteBrand } from '../services/brandManager';
 import { analyzeBrandVoice, generateWithVoice, scoreBrandConsistency } from '../services/brandVoice';

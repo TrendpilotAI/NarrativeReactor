@@ -13,7 +13,7 @@
  * POST /webhooks/stripe            — Stripe webhook endpoint
  */
 
-import { Router, Request, Response, NextFunction } from 'express';
+import { Router, Request, Response } from 'express';
 import express from 'express';
 import { asyncHandler } from '../middleware/asyncHandler';
 import {
@@ -21,7 +21,6 @@ import {
   createPortalSession,
   handleWebhook,
   submitEnterpriseContact,
-  PLAN_CONFIG,
 } from '../services/billing';
 import {
   createTenant,
@@ -31,7 +30,7 @@ import {
   PLAN_QUOTAS,
   PLAN_PRICES_USD,
 } from '../services/tenants';
-import { tenantAuth, quotaGuard } from '../middleware/tenantAuth';
+import { tenantAuth } from '../middleware/tenantAuth';
 import { apiKeyAuth } from '../middleware/auth';
 
 export const billingRouter = Router();

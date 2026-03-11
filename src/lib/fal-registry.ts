@@ -1,4 +1,4 @@
-import { fal } from '@fal-ai/client';
+
 
 export interface FalModel {
     id: string;

@@ -12,8 +12,7 @@ import {
   BlotatoPlatform,
   BlotatoPostResult,
 } from '../lib/blotato';
-import { getDraft, markDraftPublished, ContentDraft } from './contentPipeline';
-import { formatForPlatform } from './publisher';
+import { getDraft, markDraftPublished } from './contentPipeline';
 
 export interface PublishDraftRequest {
   draftId: string;

@@ -4,6 +4,7 @@
  */
 
 import { getCompetitors, analyzeCompetitorStrategy } from './competitorTracker';
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { getDefaultPersonas } from './audiencePersona';
 
 export interface PerformanceSummary {

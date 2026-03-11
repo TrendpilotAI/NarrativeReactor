@@ -13,7 +13,8 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
-    "test:ci": "vitest run --coverage --reporter=junit --outputFile=test-results.xml"
+    "test:ci": "vitest run --coverage --reporter=junit --outputFile=test-results.xml",
+    "lint": "eslint src/ --ext .ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.33.0",
@@ -44,9 +45,14 @@
   "devDependencies": {
     "@types/express": "^5.0.6",
     "@types/node": "^25.4.0",
+    "@types/supertest": "^7.2.0",
+    "@typescript-eslint/eslint-plugin": "^6",
+    "@typescript-eslint/parser": "^6",
     "@vitest/coverage-v8": "^4.0.18",
+    "eslint": "^8",
     "firebase-tools": "^15.3.0",
     "genkit-cli": "^1.29.0",
+    "supertest": "^7.2.2",
     "tsx": "^4.21.0",
     "typescript": "^5.9.3",
     "vitest": "^4.0.18"

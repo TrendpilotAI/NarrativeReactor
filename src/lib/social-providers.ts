@@ -1,4 +1,4 @@
-import { TwitterApi } from 'twitter-api-v2';
+
 import crypto from 'crypto';
 import dayjs from 'dayjs';
 import fs from 'fs/promises';
