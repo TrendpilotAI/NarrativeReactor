@@ -1,0 +1,4 @@
+#!/usr/bin/env sh
+# Husky pre-commit hook — runs lint-staged on all staged TypeScript files.
+# Enforces: ESLint auto-fix + TypeScript type-check before every commit.
+npx lint-staged
