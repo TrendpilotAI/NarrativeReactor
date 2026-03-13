@@ -33,6 +33,7 @@ export function getDb(): DatabaseSync {
   // Enable WAL mode for better concurrent read performance
   _db.exec('PRAGMA journal_mode=WAL');
   _db.exec('PRAGMA foreign_keys=ON');
+  _db.exec('PRAGMA busy_timeout=5000');
   runMigrations(_db);
   return _db;
 }
