@@ -21,6 +21,7 @@ import { globalErrorHandler } from './middleware/errorHandler';
 import { captureException, isConfigured as sentryConfigured } from './lib/errorReporter';
 import docsRouter from './openapi';
 import { billingRouter, stripeWebhookRouter } from './routes/billing';
+import { linkedInRouter } from './routes/linkedin';
 
 // Validate required env vars at startup — throws in production if missing
 validateEnv();
@@ -91,6 +92,10 @@ app.use('/webhooks', stripeWebhookRouter);
 
 // Billing API — plan listing is public; checkout/usage require tenant API key
 app.use('/api/billing', billingRouter);
+
+// LinkedIn OAuth2 PKCE flow (NR-006)
+// /api/linkedin/callback is public (redirect from LinkedIn), others require tenant auth
+app.use('/api/linkedin', linkedInRouter);
 
 // Health check — exempt from auth, safe for monitoring
 app.get('/health', (_req, res) => {

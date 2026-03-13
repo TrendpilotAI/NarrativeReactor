@@ -12,6 +12,7 @@ import {
   upgradeTenantPlan,
   deactivateTenant,
 } from './tenants';
+import { handleInvoiceUpcoming } from './meteredBilling';
 
 // ---------------------------------------------------------------------------
 // Stripe client
@@ -119,6 +120,7 @@ const HANDLED_EVENTS: Stripe.Event.Type[] = [
   'customer.subscription.deleted',
   'invoice.payment_succeeded',
   'invoice.payment_failed',
+  'invoice.upcoming',
 ];
 
 export async function handleWebhook(rawBody: Buffer, signature: string): Promise<WebhookResult> {
@@ -170,6 +172,19 @@ export async function handleWebhook(rawBody: Buffer, signature: string): Promise
       console.warn(`[billing] Payment FAILED: invoice=${invoice.id} customer=${invoice.customer}`);
       // Optionally deactivate tenant on repeated failures — handled by subscription.deleted
       return { handled: true, event: event.type };
+    }
+
+    case 'invoice.upcoming': {
+      // Finalize usage before Stripe invoices — report token usage via metered billing API
+      const upcomingInvoice = event.data.object as Stripe.UpcomingInvoice;
+      const upcomingResult = await handleInvoiceUpcoming(upcomingInvoice);
+      return {
+        handled: upcomingResult.handled,
+        event: event.type,
+        details: upcomingResult.tenantId
+          ? `tenant=${upcomingResult.tenantId} tokens=${upcomingResult.tokensReported ?? 0}`
+          : upcomingResult.error,
+      };
     }
 
     default:

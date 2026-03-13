@@ -70,7 +70,7 @@ const SCRYPT_SALT = Buffer.from(process.env.SCRYPT_SALT ?? 'narrativereactor_v2_
 // Schema initialisation (runs once at module load via the shared db singleton)
 // ---------------------------------------------------------------------------
 
-function initSchema(): void {
+export function initTenantsSchema(): void {
   getDb().exec(`
     CREATE TABLE IF NOT EXISTS tenants (
       id                     TEXT PRIMARY KEY,
@@ -107,7 +107,7 @@ function initSchema(): void {
 }
 
 // Initialise schema on module load (idempotent — uses CREATE IF NOT EXISTS)
-initSchema();
+initTenantsSchema();
 
 // ---------------------------------------------------------------------------
 // Key generation & hashing
