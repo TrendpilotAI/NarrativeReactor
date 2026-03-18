@@ -42,8 +42,8 @@ COPY --from=builder /app/dist ./dist
 COPY prompts ./prompts
 COPY public  ./public
 
-# Create data directory for SQLite
-RUN mkdir -p /data/sqlite && chown -R appuser:nodejs /data
+# Create data directory for SQLite (writable by app user)
+RUN mkdir -p /app/data /tmp/sqlite && chown -R appuser:nodejs /app/data /tmp/sqlite
 
 # Drop to non-root
 USER appuser
