@@ -40,7 +40,7 @@ router.post('/intelligence/competitors', (req: Request, res: Response) => {
 
 router.post('/intelligence/competitors/:id/posts', (req: Request, res: Response) => {
   try {
-    const post = recordCompetitorPost(req.params.id, req.body);
+    const post = recordCompetitorPost((req.params.id as string), req.body);
     res.status(201).json(post);
   } catch (err: any) { res.status(404).json({ error: err.message }); }
 });
@@ -48,12 +48,12 @@ router.post('/intelligence/competitors/:id/posts', (req: Request, res: Response)
 router.get('/intelligence/competitors/:id/activity', (req: Request, res: Response) => {
   try {
     const days = Number(req.query.days) || 30;
-    res.json(getCompetitorActivity(req.params.id, days));
+    res.json(getCompetitorActivity((req.params.id as string), days));
   } catch (err: any) { res.status(404).json({ error: err.message }); }
 });
 
 router.get('/intelligence/competitors/:id/strategy', (req: Request, res: Response) => {
-  try { res.json(analyzeCompetitorStrategy(req.params.id)); }
+  try { res.json(analyzeCompetitorStrategy((req.params.id as string))); }
   catch (err: any) { res.status(404).json({ error: err.message }); }
 });
 
@@ -76,7 +76,7 @@ router.post('/intelligence/hashtags/recommend', (req: Request, res: Response) =>
 });
 
 router.get('/intelligence/hashtags/:tag/performance', (req: Request, res: Response) => {
-  try { res.json(getHashtagPerformance(req.params.tag)); }
+  try { res.json(getHashtagPerformance((req.params.tag as string))); }
   catch (err: any) { res.status(500).json({ error: err.message }); }
 });
 
@@ -183,7 +183,7 @@ router.post('/video/projects', (req: Request, res: Response) => {
 
 router.get('/video/projects/:id', (req: Request, res: Response) => {
   try {
-    const project = getVideoProject(req.params.id);
+    const project = getVideoProject((req.params.id as string));
     if (!project) { res.status(404).json({ error: 'Project not found' }); return; }
     res.json(project);
   } catch (err: any) { res.status(500).json({ error: err.message }); }
@@ -191,7 +191,7 @@ router.get('/video/projects/:id', (req: Request, res: Response) => {
 
 router.get('/video/projects/:id/timeline', (req: Request, res: Response) => {
   try {
-    const project = getVideoProject(req.params.id);
+    const project = getVideoProject((req.params.id as string));
     if (!project) { res.status(404).json({ error: 'Project not found' }); return; }
     res.json(getProjectTimeline(project));
   } catch (err: any) { res.status(500).json({ error: err.message }); }
@@ -199,7 +199,7 @@ router.get('/video/projects/:id/timeline', (req: Request, res: Response) => {
 
 router.get('/video/projects/:id/script', (req: Request, res: Response) => {
   try {
-    const project = getVideoProject(req.params.id);
+    const project = getVideoProject((req.params.id as string));
     if (!project) { res.status(404).json({ error: 'Project not found' }); return; }
     res.json({ script: generateStitchingScript(project) });
   } catch (err: any) { res.status(500).json({ error: err.message }); }
@@ -275,7 +275,7 @@ router.get('/brands', (_req: Request, res: Response) => {
 
 router.get('/brands/:id', (req: Request, res: Response) => {
   try {
-    const brand = getBrand(req.params.id);
+    const brand = getBrand((req.params.id as string));
     if (!brand) { res.status(404).json({ error: 'Brand not found' }); return; }
     res.json(brand);
   } catch (err: any) { res.status(500).json({ error: err.message }); }
@@ -291,7 +291,7 @@ router.post('/brands', (req: Request, res: Response) => {
 
 router.put('/brands/:id', (req: Request, res: Response) => {
   try {
-    const updated = updateBrand(req.params.id, req.body);
+    const updated = updateBrand((req.params.id as string), req.body);
     if (!updated) { res.status(404).json({ error: 'Brand not found' }); return; }
     res.json(updated);
   } catch (err: any) { res.status(500).json({ error: err.message }); }
@@ -299,7 +299,7 @@ router.put('/brands/:id', (req: Request, res: Response) => {
 
 router.delete('/brands/:id', (req: Request, res: Response) => {
   try {
-    const ok = deleteBrand(req.params.id);
+    const ok = deleteBrand((req.params.id as string));
     if (!ok) { res.status(404).json({ error: 'Brand not found' }); return; }
     res.json({ success: true });
   } catch (err: any) { res.status(500).json({ error: err.message }); }
@@ -319,20 +319,20 @@ router.post('/voice/profiles/:id/samples', (req: Request, res: Response) => {
   try {
     const { samples } = req.body;
     if (!samples?.length) { res.status(400).json({ error: 'samples required' }); return; }
-    res.json(addSamples(req.params.id, samples));
+    res.json(addSamples((req.params.id as string), samples));
   } catch (err: any) { res.status(404).json({ error: err.message }); }
 });
 
 router.get('/voice/profiles/:id', (req: Request, res: Response) => {
   try {
-    const profile = getVoiceProfile(req.params.id);
+    const profile = getVoiceProfile((req.params.id as string));
     if (!profile) { res.status(404).json({ error: 'Profile not found' }); return; }
     res.json(profile);
   } catch (err: any) { res.status(500).json({ error: err.message }); }
 });
 
 router.get('/voice/profiles/:id/guidance', (req: Request, res: Response) => {
-  try { res.json(generateContentGuidance(req.params.id)); }
+  try { res.json(generateContentGuidance((req.params.id as string))); }
   catch (err: any) { res.status(404).json({ error: err.message }); }
 });
 

@@ -74,7 +74,7 @@ router.get('/drafts', asyncHandler(async (req: Request, res: Response) => {
 
 // GET /api/pipeline/drafts/:id — get a specific draft
 router.get('/drafts/:id', asyncHandler(async (req: Request, res: Response) => {
-  const draft = getDraft(req.params.id);
+  const draft = getDraft((req.params.id as string));
   if (!draft) {
     res.status(404).json({ error: 'Draft not found' });
     return;
@@ -84,7 +84,7 @@ router.get('/drafts/:id', asyncHandler(async (req: Request, res: Response) => {
 
 // POST /api/pipeline/drafts/:id/approve — approve a draft
 router.post('/drafts/:id/approve', asyncHandler(async (req: Request, res: Response) => {
-  const draft = approveDraft(req.params.id);
+  const draft = approveDraft((req.params.id as string));
   if (!draft) {
     res.status(404).json({ error: 'Draft not found' });
     return;
@@ -99,7 +99,7 @@ router.post('/drafts/:id/reject', asyncHandler(async (req: Request, res: Respons
     res.status(400).json({ error: 'Missing required field: feedback' });
     return;
   }
-  const draft = rejectDraft(req.params.id, feedback);
+  const draft = rejectDraft((req.params.id as string), feedback);
   if (!draft) {
     res.status(404).json({ error: 'Draft not found' });
     return;
@@ -118,7 +118,7 @@ router.put('/drafts/:id/content', asyncHandler(async (req: Request, res: Respons
     res.status(400).json({ error: 'format must be xThread, linkedinPost, or blogArticle' });
     return;
   }
-  const draft = updateDraftContent(req.params.id, format, content);
+  const draft = updateDraftContent((req.params.id as string), format, content);
   if (!draft) {
     res.status(404).json({ error: 'Draft not found' });
     return;
@@ -158,13 +158,13 @@ router.get('/queue', asyncHandler(async (_req: Request, res: Response) => {
 
 // GET /api/pipeline/queue/:id — get status of a Blotato post
 router.get('/queue/:id', asyncHandler(async (req: Request, res: Response) => {
-  const post = await getBlotatoPostStatus(req.params.id);
+  const post = await getBlotatoPostStatus((req.params.id as string));
   res.json(post);
 }));
 
 // DELETE /api/pipeline/queue/:id — cancel a scheduled Blotato post
 router.delete('/queue/:id', asyncHandler(async (req: Request, res: Response) => {
-  const result = await cancelBlotatoPost(req.params.id);
+  const result = await cancelBlotatoPost((req.params.id as string));
   res.json(result);
 }));
 

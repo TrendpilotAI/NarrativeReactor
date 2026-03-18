@@ -135,7 +135,7 @@ router.post('/calendar', asyncHandler(async (req: Request, res: Response) => {
 
 // DELETE /api/calendar/:id — cancel a scheduled post
 router.delete('/calendar/:id', asyncHandler(async (req: Request, res: Response) => {
-    const post = await cancelPost(req.params.id);
+    const post = await cancelPost((req.params.id as string));
     if (!post) {
         res.status(404).json({ error: 'Post not found' });
         return;
@@ -167,7 +167,7 @@ router.post('/performance/track', asyncHandler(async (req: Request, res: Respons
 
 // GET /api/performance/:postId — get post performance
 router.get('/performance/:postId', asyncHandler(async (req: Request, res: Response) => {
-    const entries = getPostPerformance(req.params.postId);
+    const entries = getPostPerformance((req.params.postId as string));
     res.json(entries);
 }));
 
@@ -208,13 +208,13 @@ router.get('/library/search', asyncHandler(async (req: Request, res: Response) =
 
 // GET /api/library/tag/:tag — content by tag
 router.get('/library/tag/:tag', asyncHandler(async (req: Request, res: Response) => {
-    const results = getContentByTag(req.params.tag);
+    const results = getContentByTag((req.params.tag as string));
     res.json(results);
 }));
 
 // GET /api/library/:id — get content by id
 router.get('/library/:id', asyncHandler(async (req: Request, res: Response) => {
-    const entry = getContentById(req.params.id);
+    const entry = getContentById((req.params.id as string));
     if (!entry) {
         res.status(404).json({ error: 'Content not found' });
         return;
@@ -301,7 +301,7 @@ router.get('/campaigns', asyncHandler(async (_req: Request, res: Response) => {
 
 // GET /api/campaigns/:id — get single campaign
 router.get('/campaigns/:id', asyncHandler(async (req: Request, res: Response) => {
-    const campaign = getCampaign(req.params.id);
+    const campaign = getCampaign((req.params.id as string));
     if (!campaign) {
         res.status(404).json({ error: 'Campaign not found' });
         return;
@@ -322,7 +322,7 @@ router.post('/campaigns', asyncHandler(async (req: Request, res: Response) => {
 
 // POST /api/campaigns/:id/advance — publish next post
 router.post('/campaigns/:id/advance', asyncHandler(async (req: Request, res: Response) => {
-    const result = advanceCampaign(req.params.id);
+    const result = advanceCampaign((req.params.id as string));
     if (!result) {
         res.status(404).json({ error: 'Campaign not found' });
         return;
@@ -332,7 +332,7 @@ router.post('/campaigns/:id/advance', asyncHandler(async (req: Request, res: Res
 
 // DELETE /api/campaigns/:id — delete campaign
 router.delete('/campaigns/:id', asyncHandler(async (req: Request, res: Response) => {
-    const deleted = deleteCampaign(req.params.id);
+    const deleted = deleteCampaign((req.params.id as string));
     if (!deleted) {
         res.status(404).json({ error: 'Campaign not found' });
         return;
@@ -411,19 +411,19 @@ router.post('/competitors', asyncHandler(async (req: Request, res: Response) => 
 
 // POST /api/competitors/:id/posts — record a competitor post
 router.post('/competitors/:id/posts', asyncHandler(async (req: Request, res: Response) => {
-    const post = recordCompetitorPost(req.params.id, req.body);
+    const post = recordCompetitorPost((req.params.id as string), req.body);
     res.status(201).json(post);
 }));
 
 // GET /api/competitors/:id/activity — get recent activity
 router.get('/competitors/:id/activity', asyncHandler(async (req: Request, res: Response) => {
     const days = parseInt(req.query.days as string) || 30;
-    res.json(getCompetitorActivity(req.params.id, days));
+    res.json(getCompetitorActivity((req.params.id as string), days));
 }));
 
 // GET /api/competitors/:id/strategy — analyze strategy
 router.get('/competitors/:id/strategy', asyncHandler(async (req: Request, res: Response) => {
-    res.json(analyzeCompetitorStrategy(req.params.id));
+    res.json(analyzeCompetitorStrategy((req.params.id as string)));
 }));
 
 // GET /api/hashtags?topic= — discover hashtags
@@ -448,7 +448,7 @@ router.post('/hashtags/recommend', asyncHandler(async (req: Request, res: Respon
 
 // GET /api/hashtags/:tag/performance — hashtag performance
 router.get('/hashtags/:tag/performance', asyncHandler(async (req: Request, res: Response) => {
-    res.json(getHashtagPerformance(`#${req.params.tag}`));
+    res.json(getHashtagPerformance(`#${(req.params.tag as string)}`));
 }));
 
 // GET /api/optimal-times?platform=&timezone= — optimal posting times
@@ -542,7 +542,7 @@ router.get('/brands', asyncHandler(async (_req: Request, res: Response) => {
 }));
 
 router.get('/brands/:id', asyncHandler(async (req: Request, res: Response) => {
-    const brand = getBrand(req.params.id);
+    const brand = getBrand((req.params.id as string));
     if (!brand) { res.status(404).json({ error: 'Brand not found' }); return; }
     res.json(brand);
 }));
@@ -563,13 +563,13 @@ router.post('/brands', asyncHandler(async (req: Request, res: Response) => {
 }));
 
 router.put('/brands/:id', asyncHandler(async (req: Request, res: Response) => {
-    const brand = updateBrand(req.params.id, req.body);
+    const brand = updateBrand((req.params.id as string), req.body);
     if (!brand) { res.status(404).json({ error: 'Brand not found' }); return; }
     res.json(brand);
 }));
 
 router.delete('/brands/:id', asyncHandler(async (req: Request, res: Response) => {
-    const deleted = deleteBrand(req.params.id);
+    const deleted = deleteBrand((req.params.id as string));
     if (!deleted) { res.status(404).json({ error: 'Brand not found' }); return; }
     res.json({ deleted: true });
 }));
@@ -581,14 +581,14 @@ router.post('/brands/:id/voice-analysis', asyncHandler(async (req: Request, res:
         res.status(400).json({ error: 'Missing required field: samples (array of strings)' }); return;
     }
     const profile = analyzeBrandVoice(samples);
-    res.json({ brandId: req.params.id, voiceProfile: profile });
+    res.json({ brandId: (req.params.id as string), voiceProfile: profile });
 }));
 
 // POST /api/brands/:id/generate — generate content in brand voice
 router.post('/brands/:id/generate', asyncHandler(async (req: Request, res: Response) => {
     const { prompt } = req.body;
     if (!prompt) { res.status(400).json({ error: 'Missing required field: prompt' }); return; }
-    const result = generateWithVoice(prompt, req.params.id);
+    const result = generateWithVoice(prompt, (req.params.id as string));
     res.json(result);
 }));
 
@@ -596,8 +596,8 @@ router.post('/brands/:id/generate', asyncHandler(async (req: Request, res: Respo
 router.post('/brands/:id/score', asyncHandler(async (req: Request, res: Response) => {
     const { content } = req.body;
     if (!content) { res.status(400).json({ error: 'Missing required field: content' }); return; }
-    const score = scoreBrandConsistency(content, req.params.id);
-    res.json({ brandId: req.params.id, score });
+    const score = scoreBrandConsistency(content, (req.params.id as string));
+    res.json({ brandId: (req.params.id as string), score });
 }));
 
 // ==================== Approval Workflows ====================
@@ -605,21 +605,21 @@ router.post('/brands/:id/score', asyncHandler(async (req: Request, res: Response
 router.post('/content/:id/review', asyncHandler(async (req: Request, res: Response) => {
     const { brandId } = req.body;
     if (!brandId) { res.status(400).json({ error: 'Missing required field: brandId' }); return; }
-    const review = submitForReview(req.params.id, brandId);
+    const review = submitForReview((req.params.id as string), brandId);
     res.status(201).json(review);
 }));
 
 router.post('/content/:id/approve', asyncHandler(async (req: Request, res: Response) => {
     const { reviewerId } = req.body;
     if (!reviewerId) { res.status(400).json({ error: 'Missing required field: reviewerId' }); return; }
-    const review = approveContent(req.params.id, reviewerId);
+    const review = approveContent((req.params.id as string), reviewerId);
     res.json(review);
 }));
 
 router.post('/content/:id/reject', asyncHandler(async (req: Request, res: Response) => {
     const { reviewerId, reason } = req.body;
     if (!reviewerId || !reason) { res.status(400).json({ error: 'Missing required fields: reviewerId, reason' }); return; }
-    const review = rejectContent(req.params.id, reviewerId, reason);
+    const review = rejectContent((req.params.id as string), reviewerId, reason);
     res.json(review);
 }));
 
@@ -629,7 +629,7 @@ router.get('/review-queue', asyncHandler(async (req: Request, res: Response) => 
 }));
 
 router.get('/content/:id/review', asyncHandler(async (req: Request, res: Response) => {
-    const review = getReviewByContentId(req.params.id);
+    const review = getReviewByContentId((req.params.id as string));
     if (!review) { res.status(404).json({ error: 'No review found' }); return; }
     res.json(review);
 }));
@@ -639,12 +639,12 @@ router.get('/content/:id/review', asyncHandler(async (req: Request, res: Respons
 router.post('/content/:id/comments', asyncHandler(async (req: Request, res: Response) => {
     const { userId, comment, parentId } = req.body;
     if (!userId || !comment) { res.status(400).json({ error: 'Missing required fields: userId, comment' }); return; }
-    const entry = addComment(req.params.id, userId, comment, parentId);
+    const entry = addComment((req.params.id as string), userId, comment, parentId);
     res.status(201).json(entry);
 }));
 
 router.get('/content/:id/comments', asyncHandler(async (req: Request, res: Response) => {
-    res.json(getComments(req.params.id));
+    res.json(getComments((req.params.id as string)));
 }));
 
 router.post('/tasks/assign', asyncHandler(async (req: Request, res: Response) => {

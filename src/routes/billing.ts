@@ -184,7 +184,7 @@ billingRouter.get('/tenants', apiKeyAuth, (_req: Request, res: Response) => {
 
 // Tenant usage summary
 billingRouter.get('/tenants/:id/usage', apiKeyAuth, (req: Request, res: Response) => {
-  const { tenant, usageLog } = getTenantUsageSummary(req.params.id);
+  const { tenant, usageLog } = getTenantUsageSummary((req.params.id as string));
   if (!tenant) {
     res.status(404).json({ error: 'Tenant not found' });
     return;
@@ -194,7 +194,7 @@ billingRouter.get('/tenants/:id/usage', apiKeyAuth, (req: Request, res: Response
 
 // Rotate API key
 billingRouter.post('/tenants/:id/rotate-key', apiKeyAuth, asyncHandler(async (req: Request, res: Response) => {
-  const newKey = rotateApiKey(req.params.id);
+  const newKey = rotateApiKey((req.params.id as string));
   res.json({
     api_key: newKey,
     warning: 'Previous API key is now invalid. Store this new key — it will not be shown again.',
