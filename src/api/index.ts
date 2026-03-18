@@ -235,13 +235,13 @@ router.get('/video/templates', (_req: Request, res: Response) => {
 });
 
 router.get('/video/templates/:type', (req: Request, res: Response) => {
-  try { res.json(getTemplate(req.params.type as any)); }
+  try { res.json(getTemplate((req.params.type as string) as any)); }
   catch (err: any) { res.status(404).json({ error: err.message }); }
 });
 
 router.post('/video/templates/:type/customize', (req: Request, res: Response) => {
   try {
-    const template = getTemplate(req.params.type as any);
+    const template = getTemplate((req.params.type as string) as any);
     res.json(customizeTemplate(template, req.body));
   } catch (err: any) { res.status(400).json({ error: err.message }); }
 });
@@ -379,7 +379,7 @@ router.get('/workflow/queue', (req: Request, res: Response) => {
 
 router.get('/workflow/:contentId', (req: Request, res: Response) => {
   try {
-    const review = getReviewByContentId(req.params.contentId);
+    const review = getReviewByContentId((req.params.contentId as string));
     if (!review) { res.status(404).json({ error: 'Review not found' }); return; }
     res.json(review);
   } catch (err: any) { res.status(500).json({ error: err.message }); }
@@ -422,17 +422,17 @@ router.post('/collab/comments', (req: Request, res: Response) => {
 });
 
 router.get('/collab/comments/:contentId', (req: Request, res: Response) => {
-  try { res.json(getComments(req.params.contentId)); }
+  try { res.json(getComments((req.params.contentId as string))); }
   catch (err: any) { res.status(500).json({ error: err.message }); }
 });
 
 router.get('/collab/assignments/:userId', (req: Request, res: Response) => {
-  try { res.json(getAssignments(req.params.userId)); }
+  try { res.json(getAssignments((req.params.userId as string))); }
   catch (err: any) { res.status(500).json({ error: err.message }); }
 });
 
 router.get('/collab/notifications/:userId', (req: Request, res: Response) => {
-  try { res.json(getNotifications(req.params.userId)); }
+  try { res.json(getNotifications((req.params.userId as string))); }
   catch (err: any) { res.status(500).json({ error: err.message }); }
 });
 

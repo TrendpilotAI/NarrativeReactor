@@ -655,7 +655,7 @@ router.post('/tasks/assign', asyncHandler(async (req: Request, res: Response) =>
 }));
 
 router.get('/tasks/:userId', asyncHandler(async (req: Request, res: Response) => {
-    res.json(getAssignments(req.params.userId));
+    res.json(getAssignments((req.params.userId as string)));
 }));
 
 // POST /api/admin/wipe — destructive: clears all content (blocked in production)
