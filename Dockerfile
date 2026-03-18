@@ -33,7 +33,7 @@ WORKDIR /app
 # Only production deps
 COPY package.json pnpm-lock.yaml ./
 RUN corepack enable && corepack prepare pnpm@latest --activate
-RUN pnpm install --prod --frozen-lockfile && pnpm store prune
+RUN pnpm install --prod --frozen-lockfile --ignore-scripts && pnpm store prune
 
 # Copy compiled output from builder
 COPY --from=builder /app/dist ./dist
