@@ -89,7 +89,7 @@ export async function reportTenantUsageToStripe(
 
   try {
     // Use Stripe Usage Records API: report cumulative tokens for billing period
-    const usageRecord = await stripe.subscriptionItems.createUsageRecord(
+    const usageRecord = await (stripe.subscriptionItems as any).createUsageRecord(
       subscriptionItemId,
       {
         quantity: tokensUsed,
@@ -168,7 +168,7 @@ export interface InvoiceUpcomingResult {
  */
 export async function handleInvoiceUpcoming(invoice: Stripe.UpcomingInvoice): Promise<InvoiceUpcomingResult> {
   const customerId = typeof invoice.customer === 'string' ? invoice.customer : (invoice.customer as Stripe.Customer)?.id;
-  const subscriptionId = typeof invoice.subscription === 'string' ? invoice.subscription : (invoice.subscription as Stripe.Subscription)?.id;
+  const subscriptionId = typeof (invoice as any).subscription === 'string' ? (invoice as any).subscription : ((invoice as any).subscription as Stripe.Subscription)?.id;
 
   if (!subscriptionId) {
     console.warn('[metered-billing] invoice.upcoming has no subscription_id — skipping');
@@ -252,7 +252,7 @@ async function reportPeriodUsageToStripe(
   const stripe = getStripe();
   try {
     const timestamp = periodEnd ? Math.floor(periodEnd.getTime() / 1000) : Math.floor(Date.now() / 1000);
-    const usageRecord = await stripe.subscriptionItems.createUsageRecord(subscriptionItemId, {
+    const usageRecord = await (stripe.subscriptionItems as any).createUsageRecord(subscriptionItemId, {
       quantity: tokens,
       timestamp,
       action: 'set',
@@ -292,7 +292,7 @@ export async function syncAllTenantUsageToStripe(): Promise<DailySyncResult> {
     WHERE active = 1
       AND stripe_subscription_id IS NOT NULL
       AND plan IN ('starter', 'pro', 'enterprise')
-  `).all() as Tenant[];
+  `).all() as unknown as Tenant[];
 
   const results: UsageReportResult[] = [];
   let skipped = 0;
