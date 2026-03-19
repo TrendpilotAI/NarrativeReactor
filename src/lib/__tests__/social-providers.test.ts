@@ -104,25 +104,26 @@ describe('social-providers.ts', () => {
         });
     });
 
-    describe('StubProviders', () => {
-        it('stub providers throw on generateAuthUrl', async () => {
+    describe('Implemented Providers Fallbacks', () => {
+        it('providers throw on generateAuthUrl if unconfigured', async () => {
             await expect(providers.linkedin.generateAuthUrl()).rejects.toThrow('OAuth not configured');
         });
 
-        it('stub providers throw on authenticate', async () => {
+        it('providers throw on authenticate if unconfigured', async () => {
             await expect(providers.instagram.authenticate({ code: 'test', codeVerifier: 'test' }))
-                .rejects.toThrow('not implemented');
+                .rejects.toThrow('OAuth not configured');
         });
 
-        it('stub providers return empty analytics', async () => {
+        it('providers return mock analytics', async () => {
             const analytics = await providers.facebook.getAnalytics('token', 7);
             expect(analytics).toEqual([
                 { label: 'Followers', value: 0, change: '+0%' },
                 { label: 'Engagement', value: 0, change: '+0%' },
+                { label: 'Reach', value: 0, change: '+0%' },
             ]);
         });
 
-        it('stub providers return empty mentions', async () => {
+        it('providers return mock mentions empty array', async () => {
             const mentions = await providers.threads.getMentions('token');
             expect(mentions).toEqual([]);
         });
