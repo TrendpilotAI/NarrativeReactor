@@ -1,0 +1,138 @@
+name: CI
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+
+env:
+  NODE_VERSION: "22"
+
+jobs:
+  # ──────────────────────────────────────────────
+  # Lint — ESLint
+  # ──────────────────────────────────────────────
+  lint:
+    name: Lint (ESLint + TypeScript)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: TypeScript type-check
+        run: npx tsc --noEmit
+
+      - name: ESLint
+        run: |
+          if [ -f ".eslintrc.json" ] || [ -f ".eslintrc.js" ] || [ -f ".eslintrc.cjs" ] || [ -f "eslint.config.js" ] || [ -f "eslint.config.ts" ]; then
+            npm run lint
+          else
+            echo "⚠️  No ESLint config found — skipping lint"
+          fi
+
+  # ──────────────────────────────────────────────
+  # Security — npm audit
+  # ──────────────────────────────────────────────
+  security:
+    name: Security Audit (npm audit)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: npm audit (high severity gate)
+        # Fail the build on HIGH or CRITICAL vulnerabilities
+        run: npm audit --audit-level=high
+        continue-on-error: false
+
+      - name: npm audit full report (informational)
+        # Generate a full report without failing on moderate/low
+        run: npm audit --json > npm-audit-report.json || true
+
+      - name: Upload audit report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: npm-audit-report
+          path: npm-audit-report.json
+
+  # ──────────────────────────────────────────────
+  # Tests — Vitest with coverage
+  # ──────────────────────────────────────────────
+  test:
+    name: Test (Vitest)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run tests with coverage
+        run: npm run test:ci
+        env:
+          CI: true
+
+      - name: Upload coverage
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage
+          path: coverage/
+
+      - name: Coverage summary
+        if: always()
+        run: |
+          echo "## Test Coverage" >> $GITHUB_STEP_SUMMARY
+          if [ -f coverage/coverage-summary.json ]; then
+            node -e "
+              const s = require('./coverage/coverage-summary.json').total;
+              console.log('| Metric | % | Covered | Total |');
+              console.log('|--------|---|---------|-------|');
+              ['lines','statements','branches','functions'].forEach(k => {
+                const m = s[k];
+                console.log(\`| \${k} | \${m.pct}% | \${m.covered} | \${m.total} |\`);
+              });
+            " >> $GITHUB_STEP_SUMMARY
+          fi
+
+  # ──────────────────────────────────────────────
+  # Docker build validation
+  # ──────────────────────────────────────────────
+  docker-build:
+    name: Docker Build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          load: true
+          tags: narrative-reactor:ci-${{ github.sha }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max

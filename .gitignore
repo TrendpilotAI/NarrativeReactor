@@ -32,6 +32,17 @@ yarn-error.log*
 *.swp
 *.swo
 
+# Runtime data (databases, state files)
+data/*.db
+data/*.db-shm
+data/*.db-wal
+data/integrations.json
+data/calendar.json
+data/collab.json
+data/brands.json
+data/campaigns.json
+data/workflows.json
+
 # Project specific
 web-ui/.next/
 web-ui/out/
