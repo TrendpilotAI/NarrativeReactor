@@ -245,6 +245,10 @@ export const osintVisualSearchTool = ai.defineTool(
                 body: JSON.stringify({ q: input.query }),
             });
 
+            if (!response.ok) {
+                throw new Error(`Serper API error: ${response.status} ${response.statusText}`);
+            }
+
             const data = await response.json();
             return {
                 query: input.query,
@@ -291,6 +295,10 @@ export const osintSentimentTool = ai.defineTool(
                 },
                 body: JSON.stringify({ q: query }),
             });
+
+            if (!response.ok) {
+                throw new Error(`Serper API error: ${response.status} ${response.statusText}`);
+            }
 
             const data = await response.json();
             return {
@@ -339,6 +347,10 @@ export const dossierEnrichmentTool = ai.defineTool(
                 },
                 body: JSON.stringify({ q: query }),
             });
+
+            if (!response.ok) {
+                throw new Error(`Serper API error: ${response.status} ${response.statusText}`);
+            }
 
             const data = await response.json();
             return {

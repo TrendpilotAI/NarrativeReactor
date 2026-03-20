@@ -153,8 +153,9 @@ export const agenticChatFlow = ai.defineFlow(
                 'Generate Pacing for Narrative',
                 'Design High-Intensity Score'
             ],
-            toolOutputs: result.message?.content
-                ?.filter(part => part.toolResponse)
+            toolOutputs: result.messages
+                ?.flatMap(m => m.content || [])
+                .filter(part => part.toolResponse)
                 .map(part => ({
                     name: part.toolResponse?.name,
                     output: part.toolResponse?.output

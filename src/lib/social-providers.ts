@@ -26,7 +26,7 @@ export interface SocialProvider {
     name: string;
     generateAuthUrl(): Promise<{ url: string; codeVerifier: string; state: string }>;
     authenticate(params: { code: string; codeVerifier: string }): Promise<AuthTokenDetails>;
-    post(accessToken: string, message: string): Promise<PostResponse>;
+    post(accessToken: string, message: string, mediaUrl?: string): Promise<PostResponse>;
     getAnalytics(accessToken: string, days: number): Promise<any>;
     getMentions(accessToken: string): Promise<any>;
 }
@@ -438,7 +438,7 @@ class StubProvider implements SocialProvider {
         throw new Error(`${this.name} authentication not implemented yet.`);
     }
 
-    async post(accessToken: string, message: string): Promise<PostResponse> {
+    async post(accessToken: string, message: string, mediaUrl?: string): Promise<PostResponse> {
         throw new Error(`${this.name} posting not implemented yet.`);
     }
 
@@ -537,7 +537,7 @@ class LinkedInProvider implements SocialProvider {
         }
 
         const meData = await meResponse.json();
-        const urn = meData.sub;
+        const urn = `urn:li:person:${meData.sub}`;
 
         const postResponse = await fetch('https://api.linkedin.com/v2/ugcPosts', {
             method: 'POST',
@@ -666,34 +666,40 @@ class InstagramProvider implements SocialProvider {
             id: igAccountId,
             name: meData.name || meData.username,
             username: meData.username,
-            accessToken: pageAccessToken, // Using page token for IG actions
+            accessToken: `${igAccountId}:${pageAccessToken}`, // Composite token: IG account ID + page token for use in post()
             expiresIn: tokenData.expires_in,
             picture: meData.profile_picture_url,
         };
     }
 
-    async post(accessTokenOrComposite: string, message: string): Promise<PostResponse> {
-        // We need both the IG Account ID and the token to post. 
-        // In this mock, the accessToken passed could be a composite or just token.
-        // If the system structure doesn't pass the ID to `post`, we either store it inside `accessToken` or fetch it.
-        // For our test, we pass `ig-account-456:fb-page-token` composite
+    async post(accessTokenOrComposite: string, message: string, mediaUrl?: string): Promise<PostResponse> {
+        // Instagram API requires media (image or video) for feed posts.
+        // A mediaUrl must be provided; text-only posts are not supported by Instagram's API.
+        if (!mediaUrl) {
+            throw new Error('Instagram requires a media URL (image or video) to create a post. Text-only posts are not supported.');
+        }
+
+        // Parse composite token format: "igAccountId:pageAccessToken"
+        // The authenticate() method stores tokens in this format so post() has
+        // both the IG account ID and the page access token needed for API calls.
         let igId = '';
         let token = accessTokenOrComposite;
         if (accessTokenOrComposite.includes(':')) {
             const parts = accessTokenOrComposite.split(':');
             igId = parts[0];
-            token = parts[1];
+            token = parts.slice(1).join(':'); // Rejoin in case token itself contains colons
         } else {
-            // fallback: try to find it again!
+            // fallback: try to find it again using the token as a user access token
             const pagesResponse = await fetch(`https://graph.facebook.com/v18.0/me/accounts?access_token=${token}`);
             if (pagesResponse.ok) {
                 const pagesData = await pagesResponse.json();
                 for (const page of pagesData.data || []) {
-                    const igResponse = await fetch(`https://graph.facebook.com/v18.0/${page.id}?fields=instagram_business_account&access_token=${token}`);
+                    const igResponse = await fetch(`https://graph.facebook.com/v18.0/${page.id}?fields=instagram_business_account&access_token=${page.access_token}`);
                     if (igResponse.ok) {
                         const igData = await igResponse.json();
                         if (igData.instagram_business_account) {
                             igId = igData.instagram_business_account.id;
+                            token = page.access_token;
                             break;
                         }
                     }
@@ -704,12 +710,9 @@ class InstagramProvider implements SocialProvider {
         if (!igId) throw new Error('Could not determine Instagram account ID for posting.');
 
         // 1. Create Media Container
-        // Instagram requires an image URL to post feed items.
-        const dummyImageUrl = 'https://example.com/placeholder.jpg';
-
         const createContainerUrl = `https://graph.facebook.com/v18.0/${igId}/media`;
         const containerBody = new URLSearchParams({
-            image_url: dummyImageUrl,
+            image_url: mediaUrl,
             caption: message,
             access_token: token,
         });

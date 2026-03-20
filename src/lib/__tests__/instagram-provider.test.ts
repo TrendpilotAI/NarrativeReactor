@@ -90,7 +90,7 @@ describe('InstagramProvider', () => {
                 id: 'ig-account-456', // use the IG account ID as the principal ID
                 name: 'Test IG User',
                 username: 'test_ig_user',
-                accessToken: 'fb-page-token', // we generally store the page token to act on behalf of the IG account
+                accessToken: 'ig-account-456:fb-page-token', // composite token: IG account ID + page token
                 expiresIn: 5184000,
                 picture: 'https://example.com/ig-pic.jpg',
             });
@@ -118,8 +118,14 @@ describe('InstagramProvider', () => {
     });
 
     describe('post', () => {
-        it('creates a media container and publishes it', async () => {
-            // Instagram requires an image. We assume the implementation passes a dummy image or parses it.
+        it('throws an error when no mediaUrl is provided (Instagram requires media)', async () => {
+            const compositeToken = 'ig-account-456:fb-page-token';
+
+            await expect(provider.post(compositeToken, 'Hello Instagram!'))
+                .rejects.toThrow('Instagram requires a media URL (image or video) to create a post. Text-only posts are not supported.');
+        });
+
+        it('creates a media container and publishes it with a provided mediaUrl', async () => {
             // 1. Create container
             mockFetch.mockResolvedValueOnce({
                 ok: true,
@@ -132,17 +138,10 @@ describe('InstagramProvider', () => {
                 json: async () => ({ id: 'media-000' }),
             });
 
-            // Note: to post without an image, maybe we just mock it succeeding.
-            // The IG user ID needs to be determined somehow. It might be passed via context,
-            // or the accessToken could be parsed, or the provider has to refetch it.
-            // Let's assume the provider implementation fetches `me/accounts` again or similar 
-            // process to get the IG user ID, but wait, the accessToken might not contain the IG ID.
-            // Actually, for simplicity, what if the stored access token is `ig-id:fb-page-token`?
-            // Yes, let's use a composite token `<ig-id>:<page-token>` to avoid redundant fetches.
-
             const compositeToken = 'ig-account-456:fb-page-token';
+            const mediaUrl = 'https://cdn.example.com/my-photo.jpg';
 
-            const result = await provider.post(compositeToken, 'Hello Instagram!');
+            const result = await provider.post(compositeToken, 'Hello Instagram!', mediaUrl);
 
             expect(mockFetch).toHaveBeenCalledTimes(2);
 
@@ -150,10 +149,10 @@ describe('InstagramProvider', () => {
             const containerCall = mockFetch.mock.calls[0];
             expect(containerCall[0]).toContain('https://graph.facebook.com/v18.0/ig-account-456/media');
             expect(containerCall[1].method).toBe('POST');
-            // Check body has caption & dummy image_url
+            // Check body has caption & the real image_url (not a placeholder)
             const bodyStr = containerCall[1].body.toString();
             expect(bodyStr).toContain('caption=Hello+Instagram');
-            expect(bodyStr).toContain('image_url=');
+            expect(bodyStr).toContain('image_url=' + encodeURIComponent(mediaUrl));
 
             // Publish call
             const publishCall = mockFetch.mock.calls[1];
@@ -163,7 +162,7 @@ describe('InstagramProvider', () => {
 
             expect(result).toEqual({
                 postId: 'media-000',
-                releaseURL: 'https://instagram.com/p/media-000', // We might not have the shortcode, but this is a stub URL
+                releaseURL: 'https://instagram.com/p/media-000',
                 status: 'posted',
             });
         });
