@@ -30,8 +30,8 @@ export class MediaStore {
             asset.url,
             asset.prompt || null,
             asset.modelId || null,
-            asset.cost || null,
-            asset.duration || null,
+            asset.cost ?? null,
+            asset.duration ?? null,
             createdAt,
             asset.metadata ? JSON.stringify(asset.metadata) : null
         );
