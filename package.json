@@ -26,7 +26,7 @@
     ]
   },
   "dependencies": {
-    "@anthropic-ai/sdk": "^0.33.0",
+    "@anthropic-ai/sdk": "^0.80.0",
     "@fal-ai/client": "^1.8.4",
     "@genkit-ai/dotprompt": "^0.9.12",
     "@genkit-ai/express": "^1.27.0",
