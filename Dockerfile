@@ -4,10 +4,14 @@ FROM node:22-slim AS builder
 WORKDIR /app
 
 # Copy dependency manifests first for layer caching
-COPY package.json package-lock.json ./
+COPY package.json pnpm-lock.yaml ./
 
-# Install ALL deps (including devDeps needed for tsc)
-RUN npm ci
+# Install pnpm and ALL deps (including devDeps needed for tsc)
+RUN corepack enable && corepack prepare pnpm@latest --activate
+RUN pnpm install --frozen-lockfile
+
+# Patch Express 5 types (postinstall may not run in Docker)
+RUN sed -i 's/\[key: string\]: string | string\[\];/[key: string]: string;/' node_modules/@types/express-serve-static-core/index.d.ts 2>/dev/null || true
 
 # Copy source
 COPY tsconfig.json ./
@@ -15,7 +19,7 @@ COPY src ./src
 COPY genkit.config.js ./
 
 # Compile TypeScript → dist/
-RUN npm run build
+RUN pnpm run build
 
 # ── Stage 2: Production ────────────────────────────────────────────────────────
 FROM node:22-slim AS production
@@ -27,8 +31,9 @@ RUN groupadd --gid 1001 nodejs && \
 WORKDIR /app
 
 # Only production deps
-COPY package.json package-lock.json ./
-RUN npm ci --omit=dev && npm cache clean --force
+COPY package.json pnpm-lock.yaml ./
+RUN corepack enable && corepack prepare pnpm@latest --activate
+RUN pnpm install --prod --frozen-lockfile --ignore-scripts && pnpm store prune
 
 # Copy compiled output from builder
 COPY --from=builder /app/dist ./dist
@@ -36,6 +41,9 @@ COPY --from=builder /app/dist ./dist
 # Copy non-compiled assets (prompts, public, etc.)
 COPY prompts ./prompts
 COPY public  ./public
+
+# Create data directory for SQLite (writable by app user)
+RUN mkdir -p /app/data /tmp/sqlite && chown -R appuser:nodejs /app/data /tmp/sqlite
 
 # Drop to non-root
 USER appuser

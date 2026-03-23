@@ -14,14 +14,22 @@
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
     "test:ci": "vitest run --coverage --reporter=junit --outputFile=test-results.xml",
-    "lint": "eslint src/ --ext .ts"
+    "prepare": "husky",
+    "lint": "eslint 'src/**/*.ts'",
+    "lint:fix": "eslint 'src/**/*.ts' --fix",
+    "postinstall": "sed -i 's/\\[key: string\\]: string | string\\[\\];/[key: string]: string;/' node_modules/@types/express-serve-static-core/index.d.ts 2>/dev/null || true"
+  },
+  "lint-staged": {
+    "src/**/*.ts": [
+      "eslint --fix",
+      "bash -c 'tsc --noEmit'"
+    ]
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.33.0",
     "@fal-ai/client": "^1.8.4",
     "@genkit-ai/dotprompt": "^0.9.12",
     "@genkit-ai/express": "^1.27.0",
-    "@genkit-ai/firebase": "^1.29.0",
     "@genkit-ai/google-genai": "^1.29.0",
     "@genkit-ai/vertexai": "^1.29.0",
     "@types/better-sqlite3": "^7.6.13",
@@ -34,7 +42,6 @@
     "dotenv": "^17.2.3",
     "express": "^4.18.2",
     "express-rate-limit": "^8.2.1",
-    "firebase-admin": "^12.0.0",
     "genkit": "^1.29.0",
     "genkitx-anthropic": "^0.30.0",
     "helmet": "^8.1.0",
@@ -48,15 +55,17 @@
     "@types/express": "^5.0.6",
     "@types/node": "^25.4.0",
     "@types/supertest": "^7.2.0",
-    "@typescript-eslint/eslint-plugin": "^6",
-    "@typescript-eslint/parser": "^6",
+    "@typescript-eslint/eslint-plugin": "^8.0.0",
+    "@typescript-eslint/parser": "^8.0.0",
     "@vitest/coverage-v8": "^4.0.18",
-    "eslint": "^8",
+    "eslint": "^9.0.0",
     "firebase-tools": "^15.3.0",
     "genkit-cli": "^1.29.0",
+    "husky": "^9.1.7",
+    "lint-staged": "^15.5.2",
     "supertest": "^7.2.2",
     "tsx": "^4.21.0",
     "typescript": "^5.9.3",
-    "vitest": "^4.0.18"
+    "vitest": "^4.1.0"
   }
 }

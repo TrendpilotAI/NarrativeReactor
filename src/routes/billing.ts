@@ -22,6 +22,7 @@ import {
   handleWebhook,
   submitEnterpriseContact,
 } from '../services/billing';
+import { syncAllTenantUsageToStripe } from '../services/meteredBilling';
 import {
   createTenant,
   listTenants,
@@ -182,7 +183,7 @@ billingRouter.get('/tenants', apiKeyAuth, (_req: Request, res: Response) => {
 
 // Tenant usage summary
 billingRouter.get('/tenants/:id/usage', apiKeyAuth, (req: Request, res: Response) => {
-  const { tenant, usageLog } = getTenantUsageSummary(req.params.id);
+  const { tenant, usageLog } = getTenantUsageSummary((req.params.id as string));
   if (!tenant) {
     res.status(404).json({ error: 'Tenant not found' });
     return;
@@ -192,10 +193,26 @@ billingRouter.get('/tenants/:id/usage', apiKeyAuth, (req: Request, res: Response
 
 // Rotate API key
 billingRouter.post('/tenants/:id/rotate-key', apiKeyAuth, asyncHandler(async (req: Request, res: Response) => {
-  const newKey = rotateApiKey(req.params.id);
+  const newKey = rotateApiKey((req.params.id as string));
   res.json({
     api_key: newKey,
     warning: 'Previous API key is now invalid. Store this new key — it will not be shown again.',
+  });
+}));
+
+// ---------------------------------------------------------------------------
+// NR-002: Daily usage sync to Stripe metered billing (admin cron endpoint)
+// POST /api/billing/sync-usage
+// ---------------------------------------------------------------------------
+
+billingRouter.post('/sync-usage', apiKeyAuth, asyncHandler(async (_req: Request, res: Response) => {
+  const result = await syncAllTenantUsageToStripe();
+  res.json({
+    message: 'Usage sync complete',
+    synced: result.synced,
+    skipped: result.skipped,
+    errors: result.errors,
+    results: result.results,
   });
 }));
 
