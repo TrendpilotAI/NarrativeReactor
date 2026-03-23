@@ -7,13 +7,12 @@ WORKDIR /app
 COPY package.json package-lock.json ./
 
 # Install ALL deps (including devDeps needed for tsc)
-RUN npm ci --ignore-scripts
+RUN npm ci
 
 # Copy source
 COPY tsconfig.json ./
 COPY src ./src
 COPY genkit.config.js ./
-COPY genkit.config.ts ./
 
 # Compile TypeScript → dist/
 RUN npm run build
@@ -29,12 +28,12 @@ WORKDIR /app
 
 # Only production deps
 COPY package.json package-lock.json ./
-RUN npm ci --omit=dev --ignore-scripts && npm cache clean --force
+RUN npm ci --omit=dev && npm cache clean --force
 
 # Copy compiled output from builder
 COPY --from=builder /app/dist ./dist
 
-# Copy any non-compiled assets (prompts, public, etc.)
+# Copy non-compiled assets (prompts, public, etc.)
 COPY prompts ./prompts
 COPY public  ./public
 

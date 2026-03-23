@@ -143,7 +143,7 @@ process.on('uncaughtException', (err) => {
 });
 
 // Start Express server
-const PORT = parseInt(process.env.NR_PORT || '3401', 10);
+const PORT = parseInt(process.env.PORT || process.env.NR_PORT || '3401', 10);
 app.listen(PORT, () => {
     console.log(`NarrativeReactor API server running on port ${PORT}`);
     if (sentryConfigured()) {
