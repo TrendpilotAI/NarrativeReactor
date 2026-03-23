@@ -10,7 +10,6 @@ import {
   getTenantByStripeSubscription,
   getTenantById,
   upgradeTenantPlan,
-  deactivateTenant,
 } from './tenants';
 import { handleInvoiceUpcoming } from './meteredBilling';
 

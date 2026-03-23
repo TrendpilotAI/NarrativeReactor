@@ -144,6 +144,204 @@ describe('social-providers', () => {
     });
   });
 
+  describe('XProvider.generateAuthUrl', () => {
+    it('generates auth URL with PKCE params', async () => {
+      process.env.X_CLIENT_ID = 'my-client-id';
+      process.env.FRONTEND_URL = 'https://myapp.com';
+      const { XProvider } = await import('../../lib/social-providers');
+      const provider = new XProvider();
+      const result = await provider.generateAuthUrl();
+      expect(result.url).toContain('twitter.com/i/oauth2/authorize');
+      expect(result.url).toContain('my-client-id');
+      expect(result.url).toContain('https%3A%2F%2Fmyapp.com');
+      expect(result.codeVerifier).toBeTruthy();
+      expect(result.state).toMatch(/^[0-9a-f]+$/);
+    });
+
+    it('uses default localhost when FRONTEND_URL is unset', async () => {
+      process.env.X_CLIENT_ID = 'my-client-id';
+      delete process.env.FRONTEND_URL;
+      const { XProvider } = await import('../../lib/social-providers');
+      const provider = new XProvider();
+      const result = await provider.generateAuthUrl();
+      expect(result.url).toContain('localhost%3A3010');
+    });
+  });
+
+  describe('XProvider.authenticate', () => {
+    it('authenticates with client secret (Basic auth)', async () => {
+      process.env.X_CLIENT_ID = 'cid';
+      process.env.X_CLIENT_SECRET = 'csecret';
+      // Token exchange
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ access_token: 'atk', refresh_token: 'rtk', expires_in: 3600 }),
+      });
+      // User info
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ data: { id: 'u1', name: 'Alice', username: 'alice', profile_image_url: 'img.jpg' } }),
+      });
+      const { XProvider } = await import('../../lib/social-providers');
+      const provider = new XProvider();
+      const result = await provider.authenticate({ code: 'auth-code', codeVerifier: 'verifier' });
+      expect(result.accessToken).toBe('atk');
+      expect(result.refreshToken).toBe('rtk');
+      expect(result.name).toBe('Alice');
+      // Should have used Basic auth header
+      const callHeaders = mockFetch.mock.calls[0][1].headers;
+      expect(callHeaders['Authorization']).toContain('Basic ');
+    });
+
+    it('authenticates without client secret (public client)', async () => {
+      process.env.X_CLIENT_ID = 'cid';
+      delete process.env.X_CLIENT_SECRET;
+      // Token exchange
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ access_token: 'atk' }),
+      });
+      // User info
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ data: { id: 'u1', name: 'Bob', username: 'bob' } }),
+      });
+      const { XProvider } = await import('../../lib/social-providers');
+      const provider = new XProvider();
+      const result = await provider.authenticate({ code: 'code', codeVerifier: 'v' });
+      expect(result.name).toBe('Bob');
+      // No Authorization header (public client)
+      const callHeaders = mockFetch.mock.calls[0][1].headers;
+      expect(callHeaders['Authorization']).toBeUndefined();
+    });
+
+    it('throws on token exchange failure', async () => {
+      mockFetch.mockResolvedValueOnce({
+        ok: false,
+        text: async () => 'Bad credentials',
+      });
+      const { XProvider } = await import('../../lib/social-providers');
+      const provider = new XProvider();
+      await expect(provider.authenticate({ code: 'bad', codeVerifier: 'v' })).rejects.toThrow('Twitter token exchange failed');
+    });
+
+    it('throws when user info fetch fails', async () => {
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ access_token: 'atk' }),
+      });
+      mockFetch.mockResolvedValueOnce({ ok: false });
+      const { XProvider } = await import('../../lib/social-providers');
+      const provider = new XProvider();
+      await expect(provider.authenticate({ code: 'c', codeVerifier: 'v' })).rejects.toThrow('Failed to fetch Twitter user info');
+    });
+  });
+
+  describe('LinkedInProvider.generateAuthUrl', () => {
+    it('generates auth URL', async () => {
+      process.env.LINKEDIN_CLIENT_ID = 'li-client';
+      process.env.FRONTEND_URL = 'https://myapp.com';
+      const { LinkedInProvider } = await import('../../lib/social-providers');
+      const provider = new LinkedInProvider();
+      const result = await provider.generateAuthUrl();
+      expect(result.url).toContain('linkedin.com/oauth/v2/authorization');
+      expect(result.url).toContain('li-client');
+      expect(result.state).toBeTruthy();
+    });
+  });
+
+  describe('LinkedInProvider.authenticate', () => {
+    it('authenticates successfully', async () => {
+      process.env.LINKEDIN_CLIENT_ID = 'li-cid';
+      process.env.LINKEDIN_CLIENT_SECRET = 'li-csecret';
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ access_token: 'li-atk', expires_in: 5183944 }),
+      });
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ sub: 'li-u1', name: 'Carol', email: 'carol@example.com', picture: 'pic.jpg' }),
+      });
+      const { LinkedInProvider } = await import('../../lib/social-providers');
+      const provider = new LinkedInProvider();
+      const result = await provider.authenticate({ code: 'licode', codeVerifier: '' });
+      expect(result.accessToken).toBe('li-atk');
+      expect(result.name).toBe('Carol');
+    });
+
+    it('throws on token exchange failure', async () => {
+      process.env.LINKEDIN_CLIENT_ID = 'li-cid';
+      process.env.LINKEDIN_CLIENT_SECRET = 'li-csecret';
+      mockFetch.mockResolvedValueOnce({ ok: false, text: async () => 'Unauthorized' });
+      const { LinkedInProvider } = await import('../../lib/social-providers');
+      const provider = new LinkedInProvider();
+      await expect(provider.authenticate({ code: 'bad', codeVerifier: '' })).rejects.toThrow('LinkedIn token exchange failed');
+    });
+
+    it('throws when user info fetch fails', async () => {
+      process.env.LINKEDIN_CLIENT_ID = 'li-cid';
+      process.env.LINKEDIN_CLIENT_SECRET = 'li-csecret';
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ access_token: 'li-atk' }),
+      });
+      mockFetch.mockResolvedValueOnce({ ok: false });
+      const { LinkedInProvider } = await import('../../lib/social-providers');
+      const provider = new LinkedInProvider();
+      await expect(provider.authenticate({ code: 'c', codeVerifier: '' })).rejects.toThrow('Failed to fetch LinkedIn user info');
+    });
+  });
+
+  describe('LinkedInProvider.post', () => {
+    it('posts successfully', async () => {
+      process.env.LINKEDIN_CLIENT_ID = 'li-cid';
+      // Get user URN
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ sub: 'li-sub-123' }),
+      });
+      // Post
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ id: 'urn:li:ugcPost:123' }),
+      });
+      const { LinkedInProvider } = await import('../../lib/social-providers');
+      const provider = new LinkedInProvider();
+      const result = await provider.post('li-atk', 'Hello LinkedIn!');
+      expect(result.status).toBe('posted');
+      expect(result.postId).toBe('urn:li:ugcPost:123');
+      expect(result.releaseURL).toContain('linkedin.com');
+    });
+
+    it('throws when post fails', async () => {
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ sub: 'li-sub-123' }),
+      });
+      mockFetch.mockResolvedValueOnce({ ok: false, text: async () => 'Forbidden' });
+      const { LinkedInProvider } = await import('../../lib/social-providers');
+      const provider = new LinkedInProvider();
+      await expect(provider.post('li-atk', 'test')).rejects.toThrow('LinkedIn post failed');
+    });
+  });
+
+  describe('LinkedInProvider.getAnalytics and getMentions', () => {
+    it('getAnalytics returns placeholder data', async () => {
+      const { LinkedInProvider } = await import('../../lib/social-providers');
+      const provider = new LinkedInProvider();
+      const result = await provider.getAnalytics('tok', 7);
+      expect(result).toHaveLength(4);
+      expect(result[0].label).toBe('Impressions');
+    });
+
+    it('getMentions returns empty array', async () => {
+      const { LinkedInProvider } = await import('../../lib/social-providers');
+      const provider = new LinkedInProvider();
+      const result = await provider.getMentions('tok');
+      expect(result).toEqual([]);
+    });
+  });
+
   describe('saveIntegration', () => {
     it('writes JSON file with encrypted tokens', async () => {
       // Use a test encryption key

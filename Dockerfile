@@ -38,7 +38,7 @@ RUN pnpm install --prod --frozen-lockfile --ignore-scripts && pnpm store prune
 # Copy compiled output from builder
 COPY --from=builder /app/dist ./dist
 
-# Copy any non-compiled assets (prompts, public, etc.)
+# Copy non-compiled assets (prompts, public, etc.)
 COPY prompts ./prompts
 COPY public  ./public
 

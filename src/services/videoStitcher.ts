@@ -88,7 +88,7 @@ export function generateStitchingScript(project: VideoProject): string {
     }
 
     // Build inputs
-    const inputArgs = scenes.map((s, i) => {
+    const inputArgs = scenes.map((s, _i) => {
         let input = `-loop 1 -t ${s.duration} -i "${s.imageUrl}"`;
         if (s.audioUrl) input += ` -i "${s.audioUrl}"`;
         return input;

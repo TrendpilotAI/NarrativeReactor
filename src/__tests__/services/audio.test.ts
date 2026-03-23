@@ -85,19 +85,27 @@ describe('VOICE_PROFILES', () => {
 
 describe('Podcast Generator', () => {
   it('generatePodcastScript generates valid script', async () => {
-    // Mock genkit generate
-    vi.doMock('@genkit-ai/ai', () => ({
-      generate: vi.fn().mockResolvedValue({
-        text: JSON.stringify({
-          title: 'Test Podcast',
-          intro: { speaker: 'Host', text: 'Welcome to the show.' },
-          segments: [
-            { speaker: 'Host', text: 'Today we discuss AI.' },
-            { speaker: 'Guest', text: 'AI is fascinating.' },
-          ],
-          outro: { speaker: 'Host', text: 'Thanks for listening.' },
+    vi.resetModules();
+    // Mock genkit.config which is what podcastGenerator.ts imports
+    vi.doMock('../../genkit.config', () => ({
+      ai: {
+        generate: vi.fn().mockResolvedValue({
+          text: JSON.stringify({
+            title: 'Test Podcast',
+            intro: { speaker: 'Host', text: 'Welcome to the show.' },
+            segments: [
+              { speaker: 'Host', text: 'Today we discuss AI.' },
+              { speaker: 'Guest', text: 'AI is fascinating.' },
+            ],
+            outro: { speaker: 'Host', text: 'Thanks for listening.' },
+          }),
         }),
-      }),
+      },
+    }));
+    // Also mock tts so it doesn't make real calls
+    vi.doMock('../../services/tts', () => ({
+      generateSpeech: vi.fn().mockResolvedValue({ audioUrl: '/test.mp3', cached: false, voiceId: 'default', filePath: '/test.mp3', durationEstimate: 5 }),
+      VOICE_PROFILES: { narrator: 'narrator', host: 'host', guest: 'guest', character_a: 'char_a', character_b: 'char_b' },
     }));
 
     const { generatePodcastScript } = await import('../../services/podcastGenerator');
@@ -115,8 +123,13 @@ describe('Podcast Generator', () => {
 
 describe('Dialogue Service', () => {
   it('generateDialogue validates character count', async () => {
-    vi.doMock('@genkit-ai/ai', () => ({
-      generate: vi.fn(),
+    vi.resetModules();
+    vi.doMock('../../genkit.config', () => ({
+      ai: { generate: vi.fn() },
+    }));
+    vi.doMock('../../services/tts', () => ({
+      generateSpeech: vi.fn(),
+      VOICE_PROFILES: { narrator: 'narrator', host: 'host', guest: 'guest', character_a: 'char_a', character_b: 'char_b' },
     }));
 
     const { generateDialogue } = await import('../../services/dialogue');
@@ -132,16 +145,22 @@ describe('Dialogue Service', () => {
 
   it('generateDialogue creates dialogue with correct structure', async () => {
     vi.resetModules();
-    vi.doMock('@genkit-ai/ai', () => ({
-      generate: vi.fn().mockResolvedValue({
-        text: JSON.stringify({
-          lines: [
-            { character: 'Alice', text: 'Hello Bob!' },
-            { character: 'Bob', text: 'Hi Alice!' },
-            { character: 'Alice', text: 'How are you?' },
-          ],
+    vi.doMock('../../genkit.config', () => ({
+      ai: {
+        generate: vi.fn().mockResolvedValue({
+          text: JSON.stringify({
+            lines: [
+              { character: 'Alice', text: 'Hello Bob!' },
+              { character: 'Bob', text: 'Hi Alice!' },
+              { character: 'Alice', text: 'How are you?' },
+            ],
+          }),
         }),
-      }),
+      },
+    }));
+    vi.doMock('../../services/tts', () => ({
+      generateSpeech: vi.fn().mockResolvedValue({ audioUrl: '/test.mp3', cached: false, voiceId: 'default', filePath: '/test.mp3', durationEstimate: 3 }),
+      VOICE_PROFILES: { narrator: 'narrator', host: 'host', guest: 'guest', character_a: 'char_a', character_b: 'char_b' },
     }));
 
     const { generateDialogue } = await import('../../services/dialogue');

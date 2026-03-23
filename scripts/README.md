@@ -1,71 +1,105 @@
-# Project Scripts
-
 ## Purpose
 
-This directory contains automation scripts that power the agent workflows. They enable self-improvement, validation, and maintenance of the compound engineering system.
+Generated directory documentation.
+
+---
+description: [Brief description of what this folder contains]
+---
+
+# [Folder Name]
+
+## Overview
+What is this folder responsible for? How does it fit into the broader application?
+> [!TIP]
+> Use this section to explain the "why" of this folder.
+
+## Architecture
+(Optional) Diagram or description of how components in this folder interact with the rest of the system.
+- **Inbound**: What uses this?
+- **Outbound**: What does this use?
 
 ## Components
+Index of critical files.
 
+| Component | Description | key Responsibility |
+|-----------|-------------|--------------------|
+| `[File].ts` | ... | ... |
 
-## Workflow Core
+## Dependencies
+- Internal: `@/lib/...`
+- External: `third-party-lib`
 
-- **`log-workflow.sh`**: Logs workflow initiations to simple text logs.
-- **`check-docs-freshness.sh`**: ✨ Checks if recent code changes have accompanying documentation updates.
-- **`pre-push-housekeeping.sh`**: Master script run before pushes to ensure repo health.
+## Decision Records
+Links to relevant ADRs or decisions affecting this module.
+- [ ] [ADR-000: Example](docs/decisions/000-example.md)
 
-## Knowledge & Compound System
+---
 
-- **`compound-search.sh`**: Context-aware search for existing solutions.
-- **`compound-metrics.sh`**: Collects usage metrics for the compound system.
-- **`compound-dashboard.sh`**: Displays daily health metrics of the agent system.
-- **`validate-compound.sh`**: Validates YAML frontmatter of solution documents.
-- **`validate-patterns.sh`**: 🔍 Validates integrity of the critical patterns registry (numerical continuity & links).
+## Component Details
 
-## Todo Management
+Index of all components in this folder with detailed descriptions based on their [Tier](docs/templates/component-tier-guide.md).
 
-- **`create-todo.sh`**: Standardized creation of todo files.
-- **`complete-todo.sh`**: Marks todos as completed and updates archives.
-- **`audit-state-drift.sh`**: Syncs file metadata with content state.
+### 🔴 {Critical Component Name}
 
-## Maintenance
+**Purpose:** {Why this component exists and what problem it solves}
 
-- **`archive-completed.sh`**: Moves finished work to archive directories.
-- **`rotate-logs.sh`**: Manages log file sizes.
-- **`check-deprecated-adrs.sh`**: Alerts on stale architectural decisions.
-- **`push-env.sh`**: Environment deployment utility.
+**Primary Functionality:**
+- {Behavior 1}
+- {Behavior 2}
 
-## Metrics & Instrumentation
+**Technologies:**
+- Framework: {Next.js, React, etc.}
+- Libraries: {Specific deps used}
+- Patterns: {BFF, Repository, etc.}
 
-- **`log-skill.sh`**: Logs skill usage for telemetry.
-- **`score-solution.sh`**: Heuristic scoring for solution documents.
-- **`score-todo.sh`**: Heuristic scoring for todo verification.
-- **`debug-scores.sh`**: Debug utility for scoring logic.
-- **`compound-health.sh`**: Weekly deep health validation.
-- **`backfill-solution-metrics.sh`**: Historical data processing.
-- **`suggest-skills.sh`**: Analyzes usage to suggest new skills.
+**Error Handling:**
+{How failures are managed}
 
-## Utilities
+**Usage:**
+```typescript
+// Example usage
+```
 
-- **`validate-architecture.sh`**: Enforces architecture documentation integrity.
-- **`update-solution-ref.sh`**: Updates solution reference counts.
-- **`update-spec-phase.sh`**: Manages specification lifecycles.
-- **`next-todo-id.sh`**: Generates unique IDs for todos.
+---
+
+### 🟡 {Supporting Component Name}
+
+**Purpose:** {Brief explanation}
+
+**Key Exports:** `{functionA}`, `{functionB}`
+
+---
+
+### 🟢 {Generated Component Name}
+
+{One-line description}
+
+---
 
 ## Usage
+Examples of how to use components in this folder.
 
-Most scripts are designed to be run via the agent workflows (e.g. `/work`, `/housekeeping`), but can be run manually for debugging.
-
-```bash
-./scripts/check-docs-freshness.sh
+```typescript
+import { Something } from './';
 ```
+
+## Troubleshooting
+Common pitfalls or gotchas.
 
 ## Changelog
 
-- **2025-12-27**: Added git worktree automation scripts.
-- **2025-12-23**: Initial transfer from InvestOS compound system.
-- **`test-fal-registry.ts`**: Verifies FalModelRegistry and pricing API.
-- **`test-video-flow.ts`**: Tests the full video generation agent flow.
-- **`test-generate-content.ts`**: Tests content generation logic.
-- **`generate-changelog.js`**: Generates project changelogs.
+### 2026-03-18
+- Generated documentation.
 
-```
+
+`test-fal-registry.ts`
+### `test-fal-registry.ts`
+
+`test-video-flow.ts`
+### `test-video-flow.ts`
+
+`generate-changelog.js`
+### `generate-changelog.js`
+
+`test-generate-content.ts`
+### `test-generate-content.ts`

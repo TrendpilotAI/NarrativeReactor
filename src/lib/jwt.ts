@@ -3,6 +3,10 @@
  *
  * We avoid adding jsonwebtoken as a dependency — the token format is simple:
  * HMAC-SHA256 signed, with expiry. Good enough for a single-user dashboard.
+ *
+ * Token types:
+ *   access  — short-lived (default 3600s / 1h), used for API auth
+ *   refresh — long-lived (default 604800s / 7d), used only to obtain new access tokens
  */
 
 import crypto from 'crypto';
@@ -11,6 +15,7 @@ interface JwtPayload {
   sub: string;
   iat: number;
   exp: number;
+  typ?: 'access' | 'refresh';
   [key: string]: unknown;
 }
 
@@ -31,10 +36,8 @@ function base64urlDecode(str: string): string {
   return Buffer.from(str, 'base64url').toString('utf8');
 }
 
-/**
- * Sign a JWT token.
- */
-export function signJwt(subject: string, expiresInSeconds: number = 86400): string {
+/** Shared sign implementation. */
+function sign(subject: string, expiresInSeconds: number, extraClaims: Record<string, unknown> = {}): string {
   const now = Math.floor(Date.now() / 1000);
   const header = base64url(JSON.stringify({ alg: 'HS256', typ: 'JWT' }));
   const payload = base64url(
@@ -42,6 +45,7 @@ export function signJwt(subject: string, expiresInSeconds: number = 86400): stri
       sub: subject,
       iat: now,
       exp: now + expiresInSeconds,
+      ...extraClaims,
     })
   );
   const signature = crypto
@@ -52,10 +56,8 @@ export function signJwt(subject: string, expiresInSeconds: number = 86400): stri
   return `${header}.${payload}.${signature}`;
 }
 
-/**
- * Verify and decode a JWT token. Throws on invalid/expired tokens.
- */
-export function verifyJwt(token: string): JwtPayload {
+/** Shared verify implementation. */
+function verify(token: string): JwtPayload {
   const parts = token.split('.');
   if (parts.length !== 3) throw new Error('Invalid token format');
 
@@ -76,5 +78,53 @@ export function verifyJwt(token: string): JwtPayload {
     throw new Error('Token expired');
   }
 
+  return decoded;
+}
+
+// ---------------------------------------------------------------------------
+// Access tokens (short-lived — 1h default)
+// ---------------------------------------------------------------------------
+
+/**
+ * Sign an access JWT token.
+ * Default expiry: 3600s (1 hour). Increase via JWT_ACCESS_TTL env var.
+ */
+export function signJwt(subject: string, expiresInSeconds: number = parseInt(process.env.JWT_ACCESS_TTL ?? '3600', 10)): string {
+  return sign(subject, expiresInSeconds, { typ: 'access' });
+}
+
+/**
+ * Verify and decode a JWT access token. Throws on invalid/expired tokens.
+ * Accepts tokens without a `typ` claim for backward-compat with old sessions.
+ */
+export function verifyJwt(token: string): JwtPayload {
+  const decoded = verify(token);
+  if (decoded.typ && decoded.typ !== 'access') {
+    throw new Error('Expected an access token');
+  }
+  return decoded;
+}
+
+// ---------------------------------------------------------------------------
+// Refresh tokens (long-lived — 7 days default)
+// ---------------------------------------------------------------------------
+
+/**
+ * Sign a refresh token.
+ * Default expiry: 604800s (7 days). Configurable via JWT_REFRESH_TTL env var.
+ */
+export function signRefreshToken(subject: string, expiresInSeconds: number = parseInt(process.env.JWT_REFRESH_TTL ?? '604800', 10)): string {
+  return sign(subject, expiresInSeconds, { typ: 'refresh' });
+}
+
+/**
+ * Verify and decode a refresh token.
+ * Throws if the token is invalid, expired, or is not a refresh token.
+ */
+export function verifyRefreshToken(token: string): JwtPayload {
+  const decoded = verify(token);
+  if (decoded.typ !== 'refresh') {
+    throw new Error('Expected a refresh token');
+  }
   return decoded;
 }

@@ -10,7 +10,7 @@ export const generateContentFlow = ai.defineFlow(
         inputSchema: z.object({
             episodeId: z.string(),
             platform: z.enum(['twitter', 'linkedin', 'threads']),
-            useClaude: z.boolean().default(false),
+            useClaude: z.boolean().default(true), // Default to Claude Opus 4.5 for all copy
         }),
         outputSchema: z.object({
             content: z.string(),

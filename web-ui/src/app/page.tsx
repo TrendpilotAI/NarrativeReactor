@@ -1,12 +1,17 @@
 'use client';
 
+import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { ContentCard, type ContentItem } from "@/components/content-card";
-import { Activity, Clock, Zap, TrendingUp, CheckCircle2, FileText, AlertTriangle } from "lucide-react";
+import { Activity, Clock, Zap, TrendingUp, CheckCircle2, FileText, AlertTriangle, X } from "lucide-react";
+import { motion, AnimatePresence } from 'framer-motion';
 
 export default function Dashboard() {
+  const [selectedItem, setSelectedItem] = useState<ContentItem | null>(null);
+
   // Mock data for dashboard
   const metrics = [
     { title: "Content In Production", value: "12", icon: Zap, color: "text-amber-400" },
@@ -48,6 +53,20 @@ export default function Dashboard() {
     }
   ];
 
+  const handleApprove = (id: string) => {
+    alert(`Approved item ${id}`);
+    setSelectedItem(null);
+  };
+
+  const handleReject = (id: string) => {
+    alert(`Rejected item ${id}`);
+    setSelectedItem(null);
+  };
+
+  const handleEdit = (id: string) => {
+    alert(`Edit item ${id}`);
+  };
+
   return (
     <div className="flex-1 space-y-6 pt-6">
       <div className="flex items-center justify-between space-y-2">
@@ -87,9 +106,9 @@ export default function Dashboard() {
                   <div key={item.id} className="h-full">
                     <ContentCard
                       item={item}
-                      onApprove={(id) => alert(`Approved item ${id}`)}
-                      onReject={(id) => alert(`Rejected item ${id}`)}
-                      onEdit={(id) => alert(`Edit item ${id}`)}
+                      onApprove={handleApprove}
+                      onReject={handleReject}
+                      onEdit={handleEdit}
                     />
                   </div>
                 ))}
@@ -104,12 +123,16 @@ export default function Dashboard() {
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {recentContent.filter(i => i.status === 'pending_approval' || i.complianceScore < 80).map((item, i) => (
-                <div key={i} className="flex items-start space-x-3 p-3 rounded-md bg-slate-950/30 border border-border hover:bg-slate-900 hover:border-cyan-500/30 transition-all duration-200 cursor-pointer">
+              {recentContent.filter(i => i.status === 'pending_approval' || i.complianceScore < 80).map((item) => (
+                <div
+                  key={item.id}
+                  className="flex items-start space-x-3 p-3 rounded-md bg-slate-950/30 border border-border hover:bg-slate-900 hover:border-cyan-500/30 transition-all duration-200 cursor-pointer"
+                  onClick={() => setSelectedItem(item)}
+                >
                   <div className="mt-1">
                     <AlertTriangle className="h-5 w-5 text-amber-500" />
                   </div>
-                  <div className="space-y-1">
+                  <div className="space-y-1 flex-1">
                     <p className="text-sm font-medium leading-none text-slate-200">{item.title}</p>
                     <p className="text-xs text-slate-500 line-clamp-2">{item.content}</p>
                     <div className="flex items-center pt-1">
@@ -124,6 +147,46 @@ export default function Dashboard() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Content Detail Modal */}
+      <AnimatePresence>
+        {selectedItem && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-6"
+            onClick={() => setSelectedItem(null)}
+          >
+            <motion.div
+              initial={{ scale: 0.9, y: 20 }}
+              animate={{ scale: 1, y: 0 }}
+              className="bg-slate-950 border border-border rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-hidden shadow-2xl"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="flex items-center justify-between p-4 border-b border-border">
+                <div className="flex items-center space-x-3">
+                  <Badge className="bg-cyan-600">{selectedItem.type}</Badge>
+                  <h3 className="text-lg font-bold text-white">{selectedItem.title}</h3>
+                </div>
+                <Button variant="ghost" size="icon" onClick={() => setSelectedItem(null)}>
+                  <X className="w-5 h-5" />
+                </Button>
+              </div>
+              <ScrollArea className="max-h-[70vh]">
+                <div className="p-4">
+                  <ContentCard
+                    item={selectedItem}
+                    onApprove={handleApprove}
+                    onReject={handleReject}
+                    onEdit={handleEdit}
+                  />
+                </div>
+              </ScrollArea>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

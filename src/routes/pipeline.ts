@@ -2,7 +2,7 @@
  * Content Pipeline & Blotato Publishing Routes
  */
 
-import { Router, Request, Response, NextFunction } from 'express';
+import { Router, Request, Response } from 'express';
 import {
   runContentPipeline,
   getDraft,
@@ -20,7 +20,7 @@ import {
   cancelBlotatoPost,
   listBlotatoAccounts,
 } from '../services/blotatoPublisher';
-import { BlotatoPlatform } from '../lib/blotato';
+
 import { incrementUsage } from '../services/tenants';
 import { asyncHandler } from '../middleware/asyncHandler';
 

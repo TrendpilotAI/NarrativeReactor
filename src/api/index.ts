@@ -16,7 +16,7 @@ import { getTemplate, listTemplates, customizeTemplate } from '../services/video
 import { generateThumbnail } from '../services/thumbnailGenerator';
 import { predictPerformance } from '../services/videoPredictor';
 import { createBrand, getBrand, listBrands, updateBrand, deleteBrand } from '../services/brandManager';
-import { createVoiceProfile, addSamples, getVoiceProfile, getProfilesByBrand, generateContentGuidance, analyzeContent, deleteVoiceProfile } from '../services/voiceCloner';
+import { createVoiceProfile, addSamples, getVoiceProfile, generateContentGuidance, analyzeContent } from '../services/voiceCloner';
 import { submitForReview, approveContent, rejectContent, getReviewQueue, getReviewByContentId } from '../services/approvalWorkflow';
 import { scoreContent, batchScore } from '../services/brandScorer';
 import { assignTask, addComment, getComments, getAssignments, getNotifications } from '../services/teamCollab';

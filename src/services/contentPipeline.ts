@@ -8,7 +8,7 @@
 import { ai } from '../genkit.config';
 import { generateCopyClaude } from '../lib/claude';
 import { draftsRepo } from '../lib/db';
-import { z } from 'genkit';
+
 import crypto from 'crypto';
 
 // ── Types ──

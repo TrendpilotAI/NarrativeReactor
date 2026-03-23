@@ -12,7 +12,6 @@
 /generate-command
 /heal-skill
 /help
-/housekeeping
 /onboard
 /plan-review
 /plan

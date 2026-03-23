@@ -1,11 +1,11 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { useParams, useSearchParams, useRouter } from 'next/navigation';
 import { AlertCircle, RefreshCw } from 'lucide-react';
 import { connectSocialAccountAction } from "../../../actions";
 
-export default function IntegrationCallback() {
+function IntegrationCallbackContent() {
     const { provider } = useParams();
     const searchParams = useSearchParams();
     const router = useRouter();
@@ -69,5 +69,17 @@ export default function IntegrationCallback() {
                 <p className="text-slate-400">Please wait while we sync your {provider} account...</p>
             </div>
         </div>
+    );
+}
+
+export default function IntegrationCallback() {
+    return (
+        <Suspense fallback={
+            <div className="flex h-screen items-center justify-center bg-slate-950 text-white">
+                <RefreshCw className="w-12 h-12 animate-spin mr-2" /> Initializing...
+            </div>
+        }>
+            <IntegrationCallbackContent />
+        </Suspense>
     );
 }
