@@ -18,7 +18,7 @@ import pipelineRoutes from './routes/pipeline';
 import webhookRoutes from './routes/webhooks';
 import { getCostSummary } from './services/costTracker';
 import { startScheduler } from './services/schedulerWorker';
-import { loginGet, loginPost, logout, requireDashboardAuth } from './middleware/dashboardAuth';
+import { loginGet, loginPost, logout, refreshSession, requireDashboardAuth } from './middleware/dashboardAuth';
 import { globalErrorHandler } from './middleware/errorHandler';
 import { captureException, isConfigured as sentryConfigured } from './lib/errorReporter';
 import docsRouter from './openapi';
@@ -70,6 +70,16 @@ const limiter = rateLimit({
 });
 app.use('/api', limiter);
 
+// Billing API — mounted before global apiKeyAuth so billing routes handle
+// their own auth (tenantAuth for usage, apiKeyAuth for admin endpoints, public for plans)
+app.use('/api/billing', billingRouter);
+
+// Webhook routes (no API key auth — uses webhook secret)
+app.use('/webhooks', webhookRoutes);
+
+// Stripe webhook — raw body required (must be before global json parser scope)
+app.use('/webhooks', stripeWebhookRouter);
+
 // Auth middleware for all /api/* routes
 app.use('/api', apiKeyAuth);
 
@@ -85,15 +95,6 @@ app.get('/api/costs', apiKeyAuth, (_req, res) => {
     res.json(getCostSummary());
 });
 
-// Webhook routes (no API key auth — uses webhook secret)
-app.use('/webhooks', webhookRoutes);
-
-// Stripe webhook — raw body required (must be before global json parser scope)
-app.use('/webhooks', stripeWebhookRouter);
-
-// Billing API — plan listing is public; checkout/usage require tenant API key
-app.use('/api/billing', billingRouter);
-
 // Health check — exempt from auth, safe for monitoring
 app.get('/health', (_req, res) => {
     res.json({ status: 'ok', service: 'NarrativeReactor', timestamp: new Date().toISOString() });
@@ -106,6 +107,7 @@ app.use('/docs', docsRouter);
 app.get('/login', loginGet);
 app.post('/login', loginPost);
 app.get('/logout', logout);
+app.post('/auth/refresh', refreshSession);
 
 // Session check for React dashboard — returns 200 if valid session, 401 otherwise
 app.get('/auth/me', (req, res) => {

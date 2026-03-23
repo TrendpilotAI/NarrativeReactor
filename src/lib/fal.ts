@@ -54,15 +54,19 @@ export async function generateImage(prompt: string, modelId: string = process.en
             console.warn('Failed to fetch pricing for image cost estimation', e);
         }
 
-        // Persist to database
-        MediaStore.save({
-            type: 'image',
-            url,
-            prompt,
-            modelId,
-            cost,
-            duration
-        });
+        // Persist to database (non-fatal — don't discard a successful generation)
+        try {
+            MediaStore.save({
+                type: 'image',
+                url,
+                prompt,
+                modelId,
+                cost,
+                duration
+            });
+        } catch (saveError) {
+            console.error('Failed to persist image to MediaStore:', saveError);
+        }
 
         return { url, modelId, cost, duration };
 
@@ -127,15 +131,19 @@ export async function generateVideo(prompt: string, imageUrl?: string, modelId: 
             console.warn('Failed to fetch pricing for video cost estimation', e);
         }
 
-        // Persist to database
-        MediaStore.save({
-            type: 'video',
-            url,
-            prompt,
-            modelId,
-            cost,
-            duration
-        });
+        // Persist to database (non-fatal — don't discard a successful generation)
+        try {
+            MediaStore.save({
+                type: 'video',
+                url,
+                prompt,
+                modelId,
+                cost,
+                duration
+            });
+        } catch (saveError) {
+            console.error('Failed to persist video to MediaStore:', saveError);
+        }
 
         return { url, modelId, cost, duration };
 
