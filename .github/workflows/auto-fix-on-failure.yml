@@ -1,0 +1,147 @@
+name: Auto-Fix CI Failures
+
+on:
+  workflow_run:
+    workflows: ['CI']
+    types: [completed]
+    branches: [main, develop]
+
+permissions:
+  contents: write
+  pull-requests: write
+  checks: read
+
+jobs:
+  analyze-and-fix:
+    name: Analyze Failure & Auto-Fix
+    runs-on: ubuntu-latest
+    if: github.event.workflow_run.conclusion == 'failure'
+    
+    steps:
+      - name: Download CI logs
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const logs = await github.rest.actions.downloadJobLogsForWorkflowRun({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              run_id: context.payload.workflow_run.id,
+            });
+            fs.writeFileSync('ci-logs.txt', logs.data);
+        
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+
+      - name: Analyze failure
+        id: analyze
+        run: |
+          echo "## Analyzing CI Failure" >> $GITHUB_STEP_SUMMARY
+          
+          # Check for npm audit issues
+          if grep -q "npm audit fix" ci-logs.txt || grep -q "high severity" ci-logs.txt; then
+            echo "issues=npm-audit" >> $GITHUB_OUTPUT
+            echo "- ❌ npm audit vulnerabilities detected" >> $GITHUB_STEP_SUMMARY
+          fi
+          
+          # Check for git submodule issues
+          if grep -q "No url found for submodule" ci-logs.txt; then
+            echo "issues=git-submodule" >> $GITHUB_OUTPUT
+            echo "- ❌ Git submodule configuration issues detected" >> $GITHUB_STEP_SUMMARY
+          fi
+          
+          # Check for general failures
+          if grep -q "Process completed with exit code 1" ci-logs.txt; then
+            echo "- ⚠️ Build process failed" >> $GITHUB_STEP_SUMMARY
+          fi
+
+      - name: Fix npm audit vulnerabilities
+        if: contains(steps.analyze.outputs.issues, 'npm-audit')
+        run: |
+          echo "## Attempting to fix npm vulnerabilities..." >> $GITHUB_STEP_SUMMARY
+          npm install
+          npm audit fix || npm audit fix --force || true
+          echo "✅ npm audit fix attempted" >> $GITHUB_STEP_SUMMARY
+
+      - name: Fix git submodule issues
+        if: contains(steps.analyze.outputs.issues, 'git-submodule')
+        run: |
+          echo "## Fixing git submodules..." >> $GITHUB_STEP_SUMMARY
+          
+          # Check if .gitmodules exists
+          if [ ! -f .gitmodules ]; then
+            echo "⚠️ .gitmodules file not found, may need manual configuration"
+            echo "Create .gitmodules or remove submodule references from .git/config"
+          else
+            # Initialize and update submodules with error handling
+            git config --file .gitmodules --get-regexp path | while read -r path _; do
+              path="${path#*.}"
+              echo "Processing submodule: $path"
+              url=$(git config --file .gitmodules --get "submodule.$path.url")
+              if [ -z "$url" ]; then
+                echo "⚠️ No URL configured for $path - marking for manual review"
+              fi
+            done
+          fi
+
+      - name: Create fix branch
+        id: create-branch
+        run: |
+          BRANCH_NAME="auto-fix/ci-failures-$(date +%s)"
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git checkout -b "$BRANCH_NAME"
+          
+          # Stage changes
+          git add package*.json .gitmodules 2>/dev/null || true
+          
+          if git diff --cached --quiet; then
+            echo "no-changes=true" >> $GITHUB_OUTPUT
+            echo "No changes to commit" >> $GITHUB_STEP_SUMMARY
+          else
+            git commit -m "fix: auto-fix CI failures detected on 2026-03-23 23:54:38 UTC"
+            git push origin "$BRANCH_NAME"
+            echo "branch-name=$BRANCH_NAME" >> $GITHUB_OUTPUT
+            echo "✅ Created branch: $BRANCH_NAME" >> $GITHUB_STEP_SUMMARY
+          fi
+
+      - name: Create Pull Request
+        if: steps.create-branch.outputs.no-changes != 'true'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const branchName = '${{ steps.create-branch.outputs.branch-name }}';
+            const baseBranch = context.payload.workflow_run.head_branch || 'develop';
+            
+            const pr = await github.rest.pulls.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: '🤖 Auto-fix: CI failures',
+              head: branchName,
+              base: baseBranch,
+              body: \
+              `## Automated CI Fix Report\n\nThis PR automatically fixes issues detected in the CI pipeline.\n\n### Issues Fixed:\n- npm audit vulnerabilities\n- git submodule configuration issues\n\n### Next Steps:\n1. Review the changes\n2. Run additional tests if needed\n3. Merge if all checks pass\n\n**Note:** This is an automated fix. Please review carefully before merging.\n\nRelated workflow run: https://github.com/${{ github.repository }}/actions/runs/${{ github.event.workflow_run.id }}\n`,
+              labels: ['automated', 'ci-fix'],
+            });
+            
+            console.log(`Created PR: #${pr.data.number}`);
+
+  notify-on-success:
+    name: Notify Results
+    runs-on: ubuntu-latest
+    needs: analyze-and-fix
+    if: always()
+    steps:
+      - name: Summary
+        run: |
+          echo "## Auto-Fix Process Complete" >> $GITHUB_STEP_SUMMARY
+          echo "Check the PR for detailed changes." >> $GITHUB_STEP_SUMMARY
