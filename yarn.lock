@@ -560,10 +560,10 @@
     handlebars "^4.7.8"
     node-fetch "^3.3.2"
 
-"@genkit-ai/express@^1.27.0":
-  version "1.29.0"
-  resolved "https://registry.yarnpkg.com/@genkit-ai/express/-/express-1.29.0.tgz#98a86055fbea9f77a82739a2c05ee9c983edb95d"
-  integrity sha512-+Mf8e45RbAlvns3a3hvIDpUAjNyWTIu1cy7vV86+6NvpPqPhkEaPkptgIX7KIXsPBEwiwsEM4SXx80M/TRbmTg==
+"@genkit-ai/express@^1.30.1":
+  version "1.30.1"
+  resolved "https://registry.yarnpkg.com/@genkit-ai/express/-/express-1.30.1.tgz#3207e3ca6cdf2645c23a44f616f9d1e709d634eb"
+  integrity sha512-O7rDoxSuu2GTeBGtFQJjArzst1oqk2z+EhibDEM996WFQkdUnqmcJoMFzLxPa2YGQ/c9TK6591bYYnBVFf8odA==
   dependencies:
     body-parser "^1.20.3"
     cors "^2.8.5"
