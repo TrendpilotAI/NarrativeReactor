@@ -27,7 +27,7 @@
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.80.0",
-    "@fal-ai/client": "^1.8.4",
+    "@fal-ai/client": "^1.9.5",
     "@genkit-ai/dotprompt": "^0.9.12",
     "@genkit-ai/express": "^1.27.0",
     "@genkit-ai/google-genai": "^1.29.0",

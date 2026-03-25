@@ -379,10 +379,10 @@
     "@eslint/core" "^0.17.0"
     levn "^0.4.1"
 
-"@fal-ai/client@^1.8.4":
-  version "1.9.4"
-  resolved "https://registry.yarnpkg.com/@fal-ai/client/-/client-1.9.4.tgz#779cf3316f51959855719f50b06af6206749b513"
-  integrity sha512-mDjF2QDq+oficSSxzmErNkseQeRXnvUBEhJy39n4PPe7jRPZeSqM2SNb27SW50rDtCtay+stwFU8zRZehlt1Qg==
+"@fal-ai/client@^1.9.5":
+  version "1.9.5"
+  resolved "https://registry.yarnpkg.com/@fal-ai/client/-/client-1.9.5.tgz#452bfe8ac657c9d2582e05caea3a95e80f6982c4"
+  integrity sha512-knCMOqXapzL5Lsp4Xh/B/VfvbseKgHg2Kt//MjcxN5weF59/26En3zXTPd8pljl4QAr7b62X5EuNCT69MpyjSA==
   dependencies:
     "@msgpack/msgpack" "^3.0.0-beta2"
     eventsource-parser "^1.1.2"

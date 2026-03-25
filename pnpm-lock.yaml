@@ -12,8 +12,8 @@ importers:
         specifier: ^0.80.0
         version: 0.80.0(zod@3.25.76)
       '@fal-ai/client':
-        specifier: ^1.8.4
-        version: 1.9.4
+        specifier: ^1.9.5
+        version: 1.9.5
       '@genkit-ai/dotprompt':
         specifier: ^0.9.12
         version: 0.9.12
@@ -428,8 +428,8 @@ packages:
     resolution: {integrity: sha512-43/qtrDUokr7LJqoF2c3+RInu/t4zfrpYdoSDfYyhg52rwLV6TnOvdG4fXm7IkSB3wErkcmJS9iEhjVtOSEjjA==}
     engines: {node: ^18.18.0 || ^20.9.0 || >=21.1.0}
 
-  '@fal-ai/client@1.9.4':
-    resolution: {integrity: sha512-mDjF2QDq+oficSSxzmErNkseQeRXnvUBEhJy39n4PPe7jRPZeSqM2SNb27SW50rDtCtay+stwFU8zRZehlt1Qg==}
+  '@fal-ai/client@1.9.5':
+    resolution: {integrity: sha512-knCMOqXapzL5Lsp4Xh/B/VfvbseKgHg2Kt//MjcxN5weF59/26En3zXTPd8pljl4QAr7b62X5EuNCT69MpyjSA==}
     engines: {node: '>=18.0.0'}
 
   '@fastify/busboy@3.2.0':
@@ -5347,7 +5347,7 @@ snapshots:
       '@eslint/core': 0.17.0
       levn: 0.4.1
 
-  '@fal-ai/client@1.9.4':
+  '@fal-ai/client@1.9.5':
     dependencies:
       '@msgpack/msgpack': 3.1.3
       eventsource-parser: 1.1.2
