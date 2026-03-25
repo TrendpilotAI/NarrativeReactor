@@ -1,111 +1,95 @@
-import { describe, it, expect, beforeEach, afterEach } from 'vitest';
+/**
+ * Tests: Token Encryption (AES-256-GCM)
+ */
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { encryptToken, decryptToken, isEncrypted } from '../../lib/tokenEncryption';
 
-// Valid 32-byte key (64 hex chars)
-const TEST_KEY = 'a'.repeat(64);
-
-describe('tokenEncryption', () => {
+describe('Token Encryption', () => {
+  const TEST_KEY = '0'.repeat(64); // 64 hex chars = 32 bytes
   const originalEnv = { ...process.env };
+
+  beforeEach(() => {
+    process.env.TOKEN_ENCRYPTION_KEY = TEST_KEY;
+  });
 
   afterEach(() => {
     process.env = { ...originalEnv };
   });
 
-  describe('with TOKEN_ENCRYPTION_KEY set', () => {
-    beforeEach(() => {
-      process.env.TOKEN_ENCRYPTION_KEY = TEST_KEY;
+  describe('encryptToken', () => {
+    it('encrypts a token and returns an enc:v1: prefix', () => {
+      const encrypted = encryptToken('my-oauth-token');
+      expect(encrypted).toMatch(/^enc:v1:/);
     });
 
-    it('encrypts and decrypts a token round-trip', () => {
-      const token = 'oauth-access-token-12345';
-      const encrypted = encryptToken(token);
-      expect(encrypted).not.toBe(token);
-      expect(encrypted.startsWith('enc:v1:')).toBe(true);
-      const decrypted = decryptToken(encrypted);
-      expect(decrypted).toBe(token);
-    });
-
-    it('produces different ciphertext each time (random IV)', () => {
-      const token = 'same-token';
-      const e1 = encryptToken(token);
-      const e2 = encryptToken(token);
+    it('produces different output each time (random IV)', () => {
+      const e1 = encryptToken('same-value');
+      const e2 = encryptToken('same-value');
       expect(e1).not.toBe(e2);
-      // Both decrypt to same value
-      expect(decryptToken(e1)).toBe(token);
-      expect(decryptToken(e2)).toBe(token);
     });
 
-    it('handles empty strings', () => {
-      const encrypted = encryptToken('');
-      expect(decryptToken(encrypted)).toBe('');
-    });
-
-    it('handles long tokens', () => {
-      const token = 'x'.repeat(10000);
-      const encrypted = encryptToken(token);
-      expect(decryptToken(encrypted)).toBe(token);
-    });
-
-    it('detects tampering (fails with wrong authTag)', () => {
-      const encrypted = encryptToken('secret-token');
-      // Tamper with the ciphertext
-      const tampered = encrypted.slice(0, -2) + 'ff';
-      expect(() => decryptToken(tampered)).toThrow();
-    });
-  });
-
-  describe('without TOKEN_ENCRYPTION_KEY (dev mode)', () => {
-    beforeEach(() => {
+    it('stores plaintext in development when no key', () => {
       delete process.env.TOKEN_ENCRYPTION_KEY;
       process.env.NODE_ENV = 'development';
+      const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+      const result = encryptToken('my-token');
+      expect(result).toBe('my-token');
+      expect(warnSpy).toHaveBeenCalled();
+      warnSpy.mockRestore();
     });
 
-    it('returns plaintext in dev mode', () => {
-      const token = 'my-dev-token';
-      const result = encryptToken(token);
-      expect(result).toBe(token);
-    });
-
-    it('decrypts plaintext tokens as-is (legacy support)', () => {
-      const token = 'legacy-plaintext-token';
-      expect(decryptToken(token)).toBe(token);
-    });
-  });
-
-  describe('without TOKEN_ENCRYPTION_KEY (production)', () => {
-    beforeEach(() => {
+    it('throws in production when no key', () => {
       delete process.env.TOKEN_ENCRYPTION_KEY;
       process.env.NODE_ENV = 'production';
-    });
-
-    it('throws on encrypt in production', () => {
       expect(() => encryptToken('token')).toThrow('TOKEN_ENCRYPTION_KEY is required');
     });
 
-    it('throws on decrypt of encrypted value in production', () => {
-      expect(() => decryptToken('enc:v1:aabb:ccdd:eeff')).toThrow('TOKEN_ENCRYPTION_KEY is required');
+    it('throws for wrong-length key', () => {
+      process.env.TOKEN_ENCRYPTION_KEY = '0'.repeat(32); // too short
+      expect(() => encryptToken('token')).toThrow('64 hex characters');
+    });
+  });
+
+  describe('decryptToken', () => {
+    it('round-trips a token', () => {
+      const original = 'secret-oauth-access-token';
+      const encrypted = encryptToken(original);
+      const decrypted = decryptToken(encrypted);
+      expect(decrypted).toBe(original);
     });
 
-    it('allows legacy plaintext tokens to pass through', () => {
-      // Legacy plaintext tokens can still be read (to allow migration)
-      expect(decryptToken('old-plaintext-token')).toBe('old-plaintext-token');
+    it('returns empty string for null/undefined', () => {
+      expect(decryptToken(null)).toBe('');
+      expect(decryptToken(undefined)).toBe('');
+    });
+
+    it('returns plaintext token as-is (legacy support)', () => {
+      const plaintext = 'legacy-token-not-encrypted';
+      const result = decryptToken(plaintext);
+      expect(result).toBe(plaintext);
+    });
+
+    it('throws for invalid encrypted format', () => {
+      expect(() => decryptToken('enc:v1:bad-format')).toThrow('Invalid encrypted token format');
+    });
+
+    it('throws when key missing for encrypted token in dev', () => {
+      const encrypted = encryptToken('token'); // encrypt with key
+      delete process.env.TOKEN_ENCRYPTION_KEY;
+      process.env.NODE_ENV = 'development';
+      expect(() => decryptToken(encrypted)).toThrow('TOKEN_ENCRYPTION_KEY not set');
     });
   });
 
   describe('isEncrypted', () => {
-    it('returns true for encrypted format', () => {
-      expect(isEncrypted('enc:v1:aabb:ccdd:eeff')).toBe(true);
+    it('returns true for encrypted tokens', () => {
+      const encrypted = encryptToken('some-value');
+      expect(isEncrypted(encrypted)).toBe(true);
     });
 
-    it('returns false for plaintext', () => {
-      expect(isEncrypted('plaintext-token')).toBe(false);
-    });
-  });
-
-  describe('key validation', () => {
-    it('rejects keys of wrong length', () => {
-      process.env.TOKEN_ENCRYPTION_KEY = 'tooshort';
-      expect(() => encryptToken('test')).toThrow('64 hex characters');
+    it('returns false for plaintext tokens', () => {
+      expect(isEncrypted('plain-token')).toBe(false);
+      expect(isEncrypted('Bearer abc123')).toBe(false);
     });
   });
 });

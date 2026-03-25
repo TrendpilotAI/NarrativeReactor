@@ -47,3 +47,4 @@ data/workflows.json
 web-ui/.next/
 web-ui/out/
 postiz-app/ # Explicitly ignore if it's a clone/submodule we don't want to track here, but user might want it. Actually, better keep it out of the main repo if it's large and has its own Git.
+data/

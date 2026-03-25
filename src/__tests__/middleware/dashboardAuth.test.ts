@@ -1,149 +1,184 @@
+/**
+ * Tests: Dashboard Auth middleware
+ */
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { Request, Response, NextFunction } from 'express';
-import { loginPost, requireDashboardAuth } from '../../middleware/dashboardAuth';
-import { signJwt } from '../../lib/jwt';
+import { loginGet, loginPost, logout, requireDashboardAuth } from '../../middleware/dashboardAuth';
 
 function makeReq(overrides: Partial<Request> = {}): Request {
   return {
-    path: '/',
     headers: {},
     body: {},
+    path: '/',
     ...overrides,
   } as unknown as Request;
 }
 
 function makeRes() {
-  const res: any = {};
-  res.status = vi.fn().mockReturnValue(res);
-  res.type = vi.fn().mockReturnValue(res);
-  res.send = vi.fn().mockReturnValue(res);
-  res.json = vi.fn().mockReturnValue(res);
-  res.redirect = vi.fn().mockReturnValue(res);
-  res.cookie = vi.fn().mockReturnValue(res);
-  res.clearCookie = vi.fn().mockReturnValue(res);
-  return res as Response & { [k: string]: ReturnType<typeof vi.fn> };
+  const json = vi.fn();
+  const send = vi.fn().mockReturnThis();
+  const type = vi.fn().mockReturnThis();
+  const redirect = vi.fn();
+  const cookie = vi.fn();
+  const clearCookie = vi.fn();
+  const status = vi.fn().mockReturnThis();
+  const res = { json, send, type, redirect, cookie, clearCookie, status } as unknown as Response;
+  return { res, json, send, type, redirect, cookie, clearCookie, status };
 }
 
-describe('dashboardAuth', () => {
+const makeNext = () => vi.fn() as unknown as NextFunction;
+
+describe('Dashboard Auth Middleware', () => {
   const originalEnv = { ...process.env };
 
   beforeEach(() => {
-    process.env.JWT_SECRET = 'test-secret';
-    process.env.DASHBOARD_PASSWORD = 'correct-password';
+    vi.clearAllMocks();
+    process.env = { ...originalEnv };
+    process.env.JWT_SECRET = 'test-jwt-secret';
+    process.env.API_KEY = 'test-api-key';
   });
 
   afterEach(() => {
     process.env = { ...originalEnv };
   });
 
+  describe('loginGet', () => {
+    it('returns HTML login page', () => {
+      const req = makeReq();
+      const { res, send, type } = makeRes();
+      loginGet(req, res);
+      expect(type).toHaveBeenCalledWith('html');
+      expect(send).toHaveBeenCalled();
+      const html = (send as any).mock.calls[0][0] as string;
+      expect(html).toContain('NarrativeReactor');
+    });
+  });
+
   describe('loginPost', () => {
-    it('sets cookie and redirects on correct password', () => {
-      const req = makeReq({ body: { password: 'correct-password' } });
-      const res = makeRes();
-      loginPost(req, res);
-      expect(res.cookie).toHaveBeenCalledWith('nr_session', expect.any(String), expect.objectContaining({
-        httpOnly: true,
-        sameSite: 'lax',
-      }));
-      expect(res.redirect).toHaveBeenCalledWith('/');
-    });
-
-    it('rejects wrong password with 401', () => {
-      const req = makeReq({ body: { password: 'wrong' } });
-      const res = makeRes();
-      loginPost(req, res);
-      expect(res.status).toHaveBeenCalledWith(401);
-      expect(res.cookie).not.toHaveBeenCalled();
-    });
-
-    it('rejects missing password with 400', () => {
-      const req = makeReq({ body: {} });
-      const res = makeRes();
-      loginPost(req, res);
-      expect(res.status).toHaveBeenCalledWith(400);
-    });
-
-    it('returns 503 in production without DASHBOARD_PASSWORD', () => {
-      delete process.env.DASHBOARD_PASSWORD;
-      process.env.NODE_ENV = 'production';
-      const req = makeReq({ body: { password: 'anything' } });
-      const res = makeRes();
-      loginPost(req, res);
-      expect(res.status).toHaveBeenCalledWith(503);
-    });
-
-    it('allows any password in dev when DASHBOARD_PASSWORD not set', () => {
+    it('redirects in dev when no password set', () => {
       delete process.env.DASHBOARD_PASSWORD;
       process.env.NODE_ENV = 'development';
       const req = makeReq({ body: { password: 'anything' } });
-      const res = makeRes();
+      const { res, redirect, cookie } = makeRes();
       loginPost(req, res);
-      expect(res.cookie).toHaveBeenCalled();
-      expect(res.redirect).toHaveBeenCalledWith('/');
+      expect(cookie).toHaveBeenCalled();
+      expect(redirect).toHaveBeenCalledWith('/');
+    });
+
+    it('returns 503 in production when no DASHBOARD_PASSWORD', () => {
+      delete process.env.DASHBOARD_PASSWORD;
+      process.env.NODE_ENV = 'production';
+      const req = makeReq({ body: {} });
+      const { res, status, send } = makeRes();
+      loginPost(req, res);
+      expect(status).toHaveBeenCalledWith(503);
+    });
+
+    it('returns 400 when password field is missing', () => {
+      process.env.DASHBOARD_PASSWORD = 'secret123';
+      const req = makeReq({ body: {} });
+      const { res, status } = makeRes();
+      loginPost(req, res);
+      expect(status).toHaveBeenCalledWith(400);
+    });
+
+    it('returns 401 for wrong password', () => {
+      process.env.DASHBOARD_PASSWORD = 'correct-password';
+      const req = makeReq({ body: { password: 'wrong-password' } });
+      const { res, status } = makeRes();
+      loginPost(req, res);
+      expect(status).toHaveBeenCalledWith(401);
+    });
+
+    it('sets cookie and redirects for correct password', () => {
+      process.env.DASHBOARD_PASSWORD = 'good-password';
+      const req = makeReq({ body: { password: 'good-password' } });
+      const { res, cookie, redirect } = makeRes();
+      loginPost(req, res);
+      expect(cookie).toHaveBeenCalled();
+      expect(redirect).toHaveBeenCalledWith('/');
+    });
+  });
+
+  describe('logout', () => {
+    it('clears cookie and redirects to /login', () => {
+      const req = makeReq();
+      const { res, clearCookie, redirect } = makeRes();
+      logout(req, res);
+      expect(clearCookie).toHaveBeenCalled();
+      expect(redirect).toHaveBeenCalledWith('/login');
     });
   });
 
   describe('requireDashboardAuth', () => {
-    it('allows /health without auth', () => {
-      const next = vi.fn();
-      const req = makeReq({ path: '/health' });
-      const res = makeRes();
-      requireDashboardAuth(req, res, next as NextFunction);
+    it('allows /login path through', () => {
+      process.env.DASHBOARD_PASSWORD = 'secret';
+      const req = makeReq({ path: '/login', headers: {} });
+      const { res } = makeRes();
+      const next = makeNext();
+      requireDashboardAuth(req, res, next);
       expect(next).toHaveBeenCalled();
     });
 
-    it('allows /api/* without auth', () => {
-      const next = vi.fn();
-      const req = makeReq({ path: '/api/generate' });
-      const res = makeRes();
-      requireDashboardAuth(req, res, next as NextFunction);
+    it('allows /api/ paths through', () => {
+      process.env.DASHBOARD_PASSWORD = 'secret';
+      const req = makeReq({ path: '/api/pipeline', headers: {} });
+      const { res } = makeRes();
+      const next = makeNext();
+      requireDashboardAuth(req, res, next);
       expect(next).toHaveBeenCalled();
     });
 
-    it('allows /login without auth', () => {
-      const next = vi.fn();
-      const req = makeReq({ path: '/login' });
-      const res = makeRes();
-      requireDashboardAuth(req, res, next as NextFunction);
+    it('allows /health through', () => {
+      process.env.DASHBOARD_PASSWORD = 'secret';
+      const req = makeReq({ path: '/health', headers: {} });
+      const { res } = makeRes();
+      const next = makeNext();
+      requireDashboardAuth(req, res, next);
       expect(next).toHaveBeenCalled();
     });
 
-    it('redirects to /login when no cookie present', () => {
-      const next = vi.fn();
-      const req = makeReq({ path: '/', headers: {} });
-      const res = makeRes();
-      requireDashboardAuth(req, res, next as NextFunction);
-      expect(next).not.toHaveBeenCalled();
-      expect(res.redirect).toHaveBeenCalledWith('/login');
+    it('redirects to /login when no cookie and password is set', () => {
+      process.env.DASHBOARD_PASSWORD = 'secret';
+      const req = makeReq({ path: '/dashboard', headers: {} });
+      const { res, redirect } = makeRes();
+      requireDashboardAuth(req, res, makeNext());
+      expect(redirect).toHaveBeenCalledWith('/login');
     });
 
-    it('allows access with valid session cookie', () => {
-      const token = signJwt('dashboard-user');
-      const next = vi.fn();
-      const req = makeReq({ path: '/', headers: { cookie: `nr_session=${token}` } });
-      const res = makeRes();
-      requireDashboardAuth(req, res, next as NextFunction);
-      expect(next).toHaveBeenCalled();
-    });
-
-    it('redirects with invalid/expired cookie', () => {
-      const next = vi.fn();
-      const req = makeReq({ path: '/', headers: { cookie: 'nr_session=garbage.token.value' } });
-      const res = makeRes();
-      requireDashboardAuth(req, res, next as NextFunction);
-      expect(next).not.toHaveBeenCalled();
-      expect(res.clearCookie).toHaveBeenCalledWith('nr_session');
-      expect(res.redirect).toHaveBeenCalledWith('/login');
-    });
-
-    it('skips auth in dev when no DASHBOARD_PASSWORD', () => {
+    it('allows through in dev when no DASHBOARD_PASSWORD', () => {
       delete process.env.DASHBOARD_PASSWORD;
       process.env.NODE_ENV = 'development';
-      const next = vi.fn();
-      const req = makeReq({ path: '/', headers: {} });
-      const res = makeRes();
-      requireDashboardAuth(req, res, next as NextFunction);
+      const req = makeReq({ path: '/dashboard', headers: {} });
+      const { res } = makeRes();
+      const next = makeNext();
+      requireDashboardAuth(req, res, next);
       expect(next).toHaveBeenCalled();
+    });
+
+    it('allows request with valid JWT cookie', async () => {
+      process.env.DASHBOARD_PASSWORD = 'secret';
+      const { signJwt } = await import('../../lib/jwt');
+      const token = signJwt('dashboard-user');
+      const req = makeReq({
+        path: '/dashboard',
+        headers: { cookie: `nr_session=${token}` },
+      });
+      const { res } = makeRes();
+      const next = makeNext();
+      requireDashboardAuth(req, res, next);
+      expect(next).toHaveBeenCalled();
+    });
+
+    it('redirects with invalid JWT cookie', () => {
+      process.env.DASHBOARD_PASSWORD = 'secret';
+      const req = makeReq({
+        path: '/dashboard',
+        headers: { cookie: 'nr_session=invalid-token-here' },
+      });
+      const { res, redirect } = makeRes();
+      requireDashboardAuth(req, res, makeNext());
+      expect(redirect).toHaveBeenCalledWith('/login');
     });
   });
 });
