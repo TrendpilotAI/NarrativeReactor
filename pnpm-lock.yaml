@@ -66,7 +66,7 @@ importers:
         specifier: ^8.1.0
         version: 8.1.0
       lodash:
-        specifier: ^4.17.21
+        specifier: ^4.17.23
         version: 4.17.23
       mime-types:
         specifier: ^3.0.2
