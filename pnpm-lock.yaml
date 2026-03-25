@@ -39,7 +39,7 @@ importers:
         specifier: ^3.0.1
         version: 3.0.1
       better-sqlite3:
-        specifier: ^12.6.2
+        specifier: ^12.8.0
         version: 12.8.0
       cors:
         specifier: ^2.8.6

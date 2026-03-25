@@ -36,7 +36,7 @@
     "@types/cors": "^2.8.19",
     "@types/lodash": "^4.17.24",
     "@types/mime-types": "^3.0.1",
-    "better-sqlite3": "^12.6.2",
+    "better-sqlite3": "^12.8.0",
     "cors": "^2.8.6",
     "dayjs": "^1.11.19",
     "dotenv": "^17.2.3",
