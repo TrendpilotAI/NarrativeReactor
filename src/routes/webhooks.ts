@@ -4,7 +4,7 @@ import { videoGenerationFlow } from '../flows/orchestration';
 import { postToSocialFlow } from '../flows/integrations';
 import { trackCost, DEFAULT_COSTS } from '../services/costTracker';
 import { asyncHandler } from '../middleware/asyncHandler';
-import { publishApprovedVideoJobs, renderShortFormVideo, ShortFormPlatform } from '../services/videoJobs';
+import { listVideoJobs, publishApprovedVideoJobs, renderShortFormVideo, ShortFormPlatform } from '../services/videoJobs';
 
 const router = Router();
 
@@ -68,7 +68,12 @@ router.post('/n8n/video/orchestrate', asyncHandler(async (req: Request, res: Res
 }));
 
 // POST /webhooks/n8n/video/publish-approved — publish approved rendered jobs only
-router.post('/n8n/video/publish-approved', asyncHandler(async (_req: Request, res: Response) => {
+router.post('/n8n/video/publish-approved', asyncHandler(async (req: Request, res: Response) => {
+  if (req.body?.dryRun === true) {
+    const jobs = listVideoJobs('rendered', 'approved');
+    res.json({ success: true, dryRun: true, publishable: jobs.length, data: jobs });
+    return;
+  }
   const jobs = await publishApprovedVideoJobs();
   res.json({ success: true, published: jobs.length, data: jobs });
 }));

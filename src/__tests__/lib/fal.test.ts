@@ -85,7 +85,7 @@ describe('fal', () => {
         expect.objectContaining({
           input: expect.objectContaining({
             aspect_ratio: '9:16',
-            duration: 30,
+            duration: '12',
             resolution: '720p',
           }),
         }),
@@ -124,7 +124,7 @@ describe('fal', () => {
       mockGetPricing.mockResolvedValue([{ unit_price: 0.01, unit: 'second' }]);
       const { generateVideo } = await import('../../lib/fal');
       const result = await generateVideo('a cat');
-      expect(result.cost).toBe(0.3); // 0.01 * 30 seconds
+      expect(result.cost).toBe(0.12); // Seedance renders max 12-second clips for a 30-second target
     });
   });
 });

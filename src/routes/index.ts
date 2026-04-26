@@ -561,7 +561,12 @@ router.post('/video/jobs/:id/publish', asyncHandler(async (req: Request, res: Re
 }));
 
 // POST /api/video/jobs/publish-approved — publish all approved rendered jobs
-router.post('/video/jobs/publish-approved', asyncHandler(async (_req: Request, res: Response) => {
+router.post('/video/jobs/publish-approved', asyncHandler(async (req: Request, res: Response) => {
+    if (req.body?.dryRun === true) {
+        const jobs = listVideoJobs('rendered', 'approved');
+        res.json({ dryRun: true, publishable: jobs.length, jobs });
+        return;
+    }
     const jobs = await publishApprovedVideoJobs();
     res.json({ published: jobs.length, jobs });
 }));

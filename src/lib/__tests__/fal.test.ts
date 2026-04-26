@@ -170,8 +170,8 @@ describe('fal.ts', () => {
             ]);
 
             const result = await generateVideo('test');
-            // 30 seconds * $0.01/second = $0.30
-            expect(result.cost).toBe(0.3);
+            // Seedance renders a 12-second clip for the 30-second target.
+            expect(result.cost).toBe(0.12);
         });
 
         it('throws when no video URL is returned', async () => {

@@ -409,6 +409,19 @@ describe('n8n video webhooks', () => {
         expect(res.body.success).toBe(true);
         expect(res.body.published).toBeGreaterThanOrEqual(0);
     });
+
+    it('supports dry-run publish-approved checks without posting to Blotato', async () => {
+        const res = await request(app)
+            .post('/webhooks/n8n/video/publish-approved')
+            .set('X-Webhook-Secret', 'test-webhook-secret')
+            .send({ dryRun: true });
+
+        expect(res.status).toBe(200);
+        expect(res.body.success).toBe(true);
+        expect(res.body.dryRun).toBe(true);
+        expect(res.body.publishable).toBeGreaterThanOrEqual(0);
+        expect(Array.isArray(res.body.data)).toBe(true);
+    });
 });
 
 describe('Unauthenticated requests return 401', () => {

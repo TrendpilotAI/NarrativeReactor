@@ -27,16 +27,18 @@ interface FalVideoModelConfig {
     modelId: string;
     resolution: string;
     aspectRatio: VideoAspectRatio;
-    durationSeconds: number;
+    targetDurationSeconds: number;
+    renderDurationSeconds: number;
+    durationInput: string | number;
     generateAudio: boolean;
     supportsImageInput: boolean;
 }
 
 const DEFAULT_SHORTS_MODEL = process.env.FAL_VIDEO_MODEL || 'fal-ai/bytedance/seedance/v1.5/pro/text-to-video';
 
-const SHORTS_PRESETS: Record<'youtube' | 'tiktok', Pick<FalVideoModelConfig, 'aspectRatio' | 'durationSeconds' | 'resolution' | 'generateAudio'>> = {
-    youtube: { aspectRatio: '9:16', durationSeconds: 30, resolution: '720p', generateAudio: true },
-    tiktok: { aspectRatio: '9:16', durationSeconds: 30, resolution: '720p', generateAudio: true },
+const SHORTS_PRESETS: Record<'youtube' | 'tiktok', Pick<FalVideoModelConfig, 'aspectRatio' | 'targetDurationSeconds' | 'resolution' | 'generateAudio'>> = {
+    youtube: { aspectRatio: '9:16', targetDurationSeconds: 30, resolution: '720p', generateAudio: true },
+    tiktok: { aspectRatio: '9:16', targetDurationSeconds: 30, resolution: '720p', generateAudio: true },
 };
 
 function clampDuration(seconds: number | undefined): number {
@@ -48,18 +50,31 @@ function modelSupportsImageInput(modelId: string): boolean {
     return /image-to-video|i2v|kling|luma|runway|hailuo/i.test(modelId);
 }
 
+function resolveRenderDuration(modelId: string, targetDurationSeconds: number): { renderDurationSeconds: number; durationInput: string | number } {
+    if (/seedance/i.test(modelId)) {
+        const allowed = Math.max(4, Math.min(12, Math.round(targetDurationSeconds)));
+        return { renderDurationSeconds: allowed, durationInput: String(allowed) };
+    }
+
+    return { renderDurationSeconds: targetDurationSeconds, durationInput: targetDurationSeconds };
+}
+
 function resolveVideoConfig(options: VideoGenerationOptions): FalVideoModelConfig {
     const platformPreset = options.platform === 'youtube' || options.platform === 'tiktok'
         ? SHORTS_PRESETS[options.platform]
         : SHORTS_PRESETS.tiktok;
 
     const modelId = options.modelId || DEFAULT_SHORTS_MODEL;
+    const targetDurationSeconds = clampDuration(options.durationSeconds || platformPreset.targetDurationSeconds);
+    const { renderDurationSeconds, durationInput } = resolveRenderDuration(modelId, targetDurationSeconds);
 
     return {
         modelId,
         resolution: platformPreset.resolution,
         aspectRatio: options.aspectRatio || platformPreset.aspectRatio,
-        durationSeconds: clampDuration(options.durationSeconds || platformPreset.durationSeconds),
+        targetDurationSeconds,
+        renderDurationSeconds,
+        durationInput,
         generateAudio: platformPreset.generateAudio,
         supportsImageInput: modelSupportsImageInput(modelId),
     };
@@ -148,7 +163,7 @@ export async function generateVideo(
             prompt: options.prompt,
             resolution: config.resolution,
             aspect_ratio: config.aspectRatio,
-            duration: config.durationSeconds,
+            duration: config.durationInput,
             generate_audio: config.generateAudio
         };
 
@@ -184,7 +199,7 @@ export async function generateVideo(
             if (pricing.length > 0) {
                 const p = pricing[0];
                 if (p.unit === 'second') {
-                    cost = p.unit_price * config.durationSeconds;
+                    cost = p.unit_price * config.renderDurationSeconds;
                 } else {
                     cost = p.unit_price;
                 }
@@ -205,7 +220,8 @@ export async function generateVideo(
                 metadata: {
                     platform: options.platform,
                     aspectRatio: config.aspectRatio,
-                    targetDurationSeconds: config.durationSeconds,
+                    targetDurationSeconds: config.targetDurationSeconds,
+                    renderDurationSeconds: config.renderDurationSeconds,
                     sourceJobId: options.sourceJobId,
                     startImageUsed: Boolean(options.imageUrl && config.supportsImageInput),
                     ignoredImageUrl: Boolean(options.imageUrl && !config.supportsImageInput)
@@ -223,7 +239,8 @@ export async function generateVideo(
             metadata: {
                 platform: options.platform,
                 aspectRatio: config.aspectRatio,
-                targetDurationSeconds: config.durationSeconds,
+                targetDurationSeconds: config.targetDurationSeconds,
+                renderDurationSeconds: config.renderDurationSeconds,
                 sourceJobId: options.sourceJobId,
                 startImageUsed: Boolean(options.imageUrl && config.supportsImageInput),
             }
