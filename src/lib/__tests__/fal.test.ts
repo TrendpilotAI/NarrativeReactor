@@ -170,8 +170,8 @@ describe('fal.ts', () => {
             ]);
 
             const result = await generateVideo('test');
-            // 5 seconds * $0.01/second = $0.05
-            expect(result.cost).toBe(0.05);
+            // 30 seconds * $0.01/second = $0.30
+            expect(result.cost).toBe(0.3);
         });
 
         it('throws when no video URL is returned', async () => {

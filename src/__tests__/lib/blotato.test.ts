@@ -13,6 +13,7 @@ global.fetch = mockFetch as any;
 
 beforeEach(() => {
   mockFetch.mockReset();
+  process.env.BLOTATO_API_KEY = 'test-blotato-key';
 });
 
 describe('Blotato API Client', () => {
@@ -83,6 +84,48 @@ describe('Blotato API Client', () => {
         platforms: ['x'],
         content: 'Test',
       })).rejects.toThrow('Blotato API error (401)');
+    });
+
+    it('requires media URLs for YouTube and TikTok publishing', async () => {
+      await expect(blotatoPublish({
+        platforms: ['youtube', 'tiktok'],
+        content: 'Video caption',
+      })).rejects.toThrow('Video platforms require at least one media URL');
+      expect(mockFetch).not.toHaveBeenCalled();
+    });
+
+    it('passes video metadata for YouTube and TikTok posts', async () => {
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          id: 'post-video',
+          status: 'queued',
+          platforms: [{ platform: 'youtube', status: 'pending' }],
+        }),
+      });
+
+      await blotatoPublish({
+        platforms: ['youtube'],
+        content: 'Video caption',
+        mediaUrls: ['https://cdn.test/video.mp4'],
+        title: 'Short title',
+        thumbnailUrl: 'https://cdn.test/thumb.jpg',
+        hashtags: ['#FlipMyEra'],
+      });
+
+      const body = JSON.parse(mockFetch.mock.calls[0][1].body);
+      expect(body.media_urls).toEqual(['https://cdn.test/video.mp4']);
+      expect(body.title).toBe('Short title');
+      expect(body.thumbnail_url).toBe('https://cdn.test/thumb.jpg');
+      expect(body.hashtags).toEqual(['#FlipMyEra']);
+    });
+
+    it('requires BLOTATO_API_KEY', async () => {
+      delete process.env.BLOTATO_API_KEY;
+      await expect(blotatoPublish({
+        platforms: ['x'],
+        content: 'Test',
+      })).rejects.toThrow('BLOTATO_API_KEY is required');
     });
   });
 

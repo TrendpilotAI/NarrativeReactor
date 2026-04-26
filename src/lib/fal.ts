@@ -7,6 +7,62 @@ export interface GenerationResult {
     modelId: string;
     cost?: number;
     duration?: number;
+    metadata?: Record<string, any>;
+}
+
+export type VideoPlatform = 'youtube' | 'tiktok' | 'instagram' | 'twitter' | 'linkedin';
+export type VideoAspectRatio = '9:16' | '16:9' | '1:1' | '4:5';
+
+export interface VideoGenerationOptions {
+    prompt: string;
+    imageUrl?: string;
+    platform?: VideoPlatform;
+    aspectRatio?: VideoAspectRatio;
+    durationSeconds?: number;
+    modelId?: string;
+    sourceJobId?: string;
+}
+
+interface FalVideoModelConfig {
+    modelId: string;
+    resolution: string;
+    aspectRatio: VideoAspectRatio;
+    durationSeconds: number;
+    generateAudio: boolean;
+    supportsImageInput: boolean;
+}
+
+const DEFAULT_SHORTS_MODEL = process.env.FAL_VIDEO_MODEL || 'fal-ai/bytedance/seedance/v1.5/pro/text-to-video';
+
+const SHORTS_PRESETS: Record<'youtube' | 'tiktok', Pick<FalVideoModelConfig, 'aspectRatio' | 'durationSeconds' | 'resolution' | 'generateAudio'>> = {
+    youtube: { aspectRatio: '9:16', durationSeconds: 30, resolution: '720p', generateAudio: true },
+    tiktok: { aspectRatio: '9:16', durationSeconds: 30, resolution: '720p', generateAudio: true },
+};
+
+function clampDuration(seconds: number | undefined): number {
+    if (!seconds || Number.isNaN(seconds)) return 30;
+    return Math.max(30, Math.min(60, Math.round(seconds)));
+}
+
+function modelSupportsImageInput(modelId: string): boolean {
+    return /image-to-video|i2v|kling|luma|runway|hailuo/i.test(modelId);
+}
+
+function resolveVideoConfig(options: VideoGenerationOptions): FalVideoModelConfig {
+    const platformPreset = options.platform === 'youtube' || options.platform === 'tiktok'
+        ? SHORTS_PRESETS[options.platform]
+        : SHORTS_PRESETS.tiktok;
+
+    const modelId = options.modelId || DEFAULT_SHORTS_MODEL;
+
+    return {
+        modelId,
+        resolution: platformPreset.resolution,
+        aspectRatio: options.aspectRatio || platformPreset.aspectRatio,
+        durationSeconds: clampDuration(options.durationSeconds || platformPreset.durationSeconds),
+        generateAudio: platformPreset.generateAudio,
+        supportsImageInput: modelSupportsImageInput(modelId),
+    };
 }
 
 export async function generateImage(prompt: string, modelId: string = process.env.FAL_IMAGE_MODEL || 'fal-ai/hunyuan-image/v3/instruct/text-to-image'): Promise<GenerationResult> {
@@ -76,20 +132,28 @@ export async function generateImage(prompt: string, modelId: string = process.en
     }
 }
 
-export async function generateVideo(prompt: string, imageUrl?: string, modelId: string = process.env.FAL_VIDEO_MODEL || 'fal-ai/bytedance/seedance/v1.5/pro/text-to-video'): Promise<GenerationResult> {
+export async function generateVideo(
+    optionsOrPrompt: VideoGenerationOptions | string,
+    legacyImageUrl?: string,
+    legacyModelId?: string
+): Promise<GenerationResult> {
+    const options: VideoGenerationOptions = typeof optionsOrPrompt === 'string'
+        ? { prompt: optionsOrPrompt, imageUrl: legacyImageUrl, modelId: legacyModelId }
+        : optionsOrPrompt;
     const start = Date.now();
     try {
-        const endpoint = modelId;
+        const config = resolveVideoConfig(options);
+        const endpoint = config.modelId;
         const input: any = {
-            prompt: prompt,
-            resolution: "720p",
-            aspect_ratio: "16:9",
-            duration: 5, // Integer 4-12
-            generate_audio: true // Supported by Seedance
+            prompt: options.prompt,
+            resolution: config.resolution,
+            aspect_ratio: config.aspectRatio,
+            duration: config.durationSeconds,
+            generate_audio: config.generateAudio
         };
 
-        if (imageUrl) {
-            // Hunyuan is text-to-video primarily; ignore imageUrl for now or find specific I2V endpoint
+        if (options.imageUrl && config.supportsImageInput) {
+            input.image_url = options.imageUrl;
         }
 
         const result: any = await fal.subscribe(endpoint, {
@@ -116,13 +180,11 @@ export async function generateVideo(prompt: string, imageUrl?: string, modelId: 
         // Estimate cost
         let cost = 0;
         try {
-            const pricing = await FalRegistry.getPricing([modelId]);
+            const pricing = await FalRegistry.getPricing([config.modelId]);
             if (pricing.length > 0) {
-                // Seedance pricing might be per second or per video
-                // Simplistic estimation: unit_price * duration if unit is seconds, or just unit_price if unit is video
                 const p = pricing[0];
                 if (p.unit === 'second') {
-                    cost = p.unit_price * 5; // 5 seconds duration
+                    cost = p.unit_price * config.durationSeconds;
                 } else {
                     cost = p.unit_price;
                 }
@@ -136,16 +198,36 @@ export async function generateVideo(prompt: string, imageUrl?: string, modelId: 
             MediaStore.save({
                 type: 'video',
                 url,
-                prompt,
-                modelId,
+                prompt: options.prompt,
+                modelId: config.modelId,
                 cost,
-                duration
+                duration,
+                metadata: {
+                    platform: options.platform,
+                    aspectRatio: config.aspectRatio,
+                    targetDurationSeconds: config.durationSeconds,
+                    sourceJobId: options.sourceJobId,
+                    startImageUsed: Boolean(options.imageUrl && config.supportsImageInput),
+                    ignoredImageUrl: Boolean(options.imageUrl && !config.supportsImageInput)
+                }
             });
         } catch (saveError) {
             console.error('Failed to persist video to MediaStore:', saveError);
         }
 
-        return { url, modelId, cost, duration };
+        return {
+            url,
+            modelId: config.modelId,
+            cost,
+            duration,
+            metadata: {
+                platform: options.platform,
+                aspectRatio: config.aspectRatio,
+                targetDurationSeconds: config.durationSeconds,
+                sourceJobId: options.sourceJobId,
+                startImageUsed: Boolean(options.imageUrl && config.supportsImageInput),
+            }
+        };
 
     } catch (error: any) {
         console.error('Error generating video with Fal.ai:', error);

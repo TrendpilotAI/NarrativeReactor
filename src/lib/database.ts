@@ -2,7 +2,7 @@ import Database from 'better-sqlite3';
 import path from 'path';
 
 // Database file location (in project root)
-const DB_PATH = path.join(process.cwd(), 'data', 'narrative-reactor.db');
+const DB_PATH = process.env.DATABASE_PATH || path.join(process.cwd(), 'data', 'narrative-reactor.db');
 
 let db: Database.Database | null = null;
 
@@ -81,6 +81,37 @@ function initSchema(db: Database.Database) {
         )
     `);
 
+    db.exec(`
+        CREATE TABLE IF NOT EXISTS video_render_jobs (
+            id TEXT PRIMARY KEY,
+            status TEXT NOT NULL CHECK(status IN ('queued', 'rendering', 'rendered', 'failed')),
+            publishing_status TEXT NOT NULL CHECK(publishing_status IN ('pending_approval', 'approved', 'rejected', 'published', 'scheduled', 'failed')),
+            persona TEXT,
+            channel TEXT,
+            theme TEXT NOT NULL,
+            script TEXT,
+            prompt TEXT NOT NULL,
+            platform_targets TEXT NOT NULL,
+            aspect_ratio TEXT NOT NULL,
+            duration_seconds INTEGER NOT NULL,
+            video_url TEXT,
+            thumbnail_url TEXT,
+            captions_json TEXT,
+            score_json TEXT,
+            blotato_result_json TEXT,
+            error TEXT,
+            scheduled_at TEXT,
+            created_at TEXT DEFAULT (datetime('now')),
+            updated_at TEXT DEFAULT (datetime('now')),
+            metadata TEXT
+        )
+    `);
+
+    db.exec(`
+        CREATE INDEX IF NOT EXISTS idx_video_render_jobs_status
+        ON video_render_jobs(status, publishing_status, created_at)
+    `);
+
     // Initialize default integrations if not present
     const integrationStmt = db.prepare(`
         INSERT OR IGNORE INTO integrations (id, provider, name, connected)
@@ -93,6 +124,8 @@ function initSchema(db: Database.Database) {
         { id: 'threads', provider: 'threads', name: 'Threads' },
         { id: 'instagram', provider: 'instagram', name: 'Instagram' },
         { id: 'facebook', provider: 'facebook', name: 'Facebook' },
+        { id: 'youtube', provider: 'youtube', name: 'YouTube' },
+        { id: 'tiktok', provider: 'tiktok', name: 'TikTok' },
     ];
 
     for (const int of integrations) {

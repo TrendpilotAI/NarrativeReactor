@@ -354,14 +354,20 @@ describe('Agent Tools', () => {
 
       const result = await videoGenTool(input);
 
-      expect(mockGenerateVideo).toHaveBeenCalledWith(input.sceneDescription, undefined, undefined);
+      expect(mockGenerateVideo).toHaveBeenCalledWith(expect.objectContaining({
+        prompt: input.sceneDescription,
+        platform: 'tiktok',
+        aspectRatio: '9:16',
+        durationSeconds: 30,
+      }));
       expect(result).toEqual({
         prompt: input.sceneDescription,
         videoUrl: 'https://fal.ai/video.mp4',
         modelId: 'seedance-1.5-pro',
         cost: 0.25,
         duration: 12.5,
-        status: 'generated',
+        status: 'rendered',
+        metadata: undefined,
       });
     });
 
@@ -374,11 +380,11 @@ describe('Agent Tools', () => {
         modelId: 'custom-video-model',
       });
 
-      expect(mockGenerateVideo).toHaveBeenCalledWith(
-        input.sceneDescription,
-        'https://img.png',
-        'custom-video-model'
-      );
+      expect(mockGenerateVideo).toHaveBeenCalledWith(expect.objectContaining({
+        prompt: input.sceneDescription,
+        imageUrl: 'https://img.png',
+        modelId: 'custom-video-model',
+      }));
     });
 
     it('should return error object on failure', async () => {
@@ -386,7 +392,7 @@ describe('Agent Tools', () => {
 
       const result = await videoGenTool(input);
 
-      expect(result).toEqual({ error: 'Video gen failed' });
+      expect(result).toEqual({ status: 'failed', error: 'Video gen failed' });
     });
   });
 });

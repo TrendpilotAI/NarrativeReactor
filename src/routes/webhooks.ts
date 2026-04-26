@@ -4,6 +4,7 @@ import { videoGenerationFlow } from '../flows/orchestration';
 import { postToSocialFlow } from '../flows/integrations';
 import { trackCost, DEFAULT_COSTS } from '../services/costTracker';
 import { asyncHandler } from '../middleware/asyncHandler';
+import { publishApprovedVideoJobs, renderShortFormVideo, ShortFormPlatform } from '../services/videoJobs';
 
 const router = Router();
 
@@ -37,15 +38,39 @@ router.post('/n8n/generate', asyncHandler(async (req: Request, res: Response) =>
   res.json({ success: true, data: result });
 }));
 
-// POST /webhooks/n8n/video — trigger video generation
+// POST /webhooks/n8n/video — create/render short-form video job
 router.post('/n8n/video', asyncHandler(async (req: Request, res: Response) => {
+  const { theme, platformTargets } = req.body;
+  if (!theme) {
+    res.status(400).json({ error: 'Missing required field: theme' });
+    return;
+  }
+  if (platformTargets && (!Array.isArray(platformTargets) || platformTargets.some((p: string) => p !== 'youtube' && p !== 'tiktok'))) {
+    res.status(400).json({ error: 'platformTargets must contain only youtube and/or tiktok' });
+    return;
+  }
+  const result = await renderShortFormVideo({
+    ...req.body,
+    platformTargets: platformTargets as ShortFormPlatform[] | undefined,
+  });
+  res.status(result.status === 'rendered' ? 201 : 202).json({ success: result.status === 'rendered', data: result });
+}));
+
+// POST /webhooks/n8n/video/orchestrate — legacy production package flow
+router.post('/n8n/video/orchestrate', asyncHandler(async (req: Request, res: Response) => {
   const { theme, characters } = req.body;
   if (!theme || !characters) {
     res.status(400).json({ error: 'Missing required fields: theme, characters' });
     return;
   }
   const result = await videoGenerationFlow({ theme, characters });
-  res.json({ success: true, data: result });
+  res.json({ success: result.video?.status !== 'failed', data: result });
+}));
+
+// POST /webhooks/n8n/video/publish-approved — publish approved rendered jobs only
+router.post('/n8n/video/publish-approved', asyncHandler(async (_req: Request, res: Response) => {
+  const jobs = await publishApprovedVideoJobs();
+  res.json({ success: true, published: jobs.length, data: jobs });
 }));
 
 // POST /webhooks/n8n/social — trigger social posting

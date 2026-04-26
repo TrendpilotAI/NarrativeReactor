@@ -49,7 +49,19 @@ vi.mock('stripe', () => ({
 // Mock fal.ai
 vi.mock('../../lib/fal', () => ({
     generateImage: vi.fn().mockResolvedValue({ url: 'https://fal.test/image.png' }),
-    generateVideo: vi.fn().mockResolvedValue({ url: 'https://fal.test/video.mp4' }),
+    generateVideo: vi.fn().mockResolvedValue({ url: 'https://fal.test/video.mp4', modelId: 'test-video-model', cost: 0.1, duration: 5 }),
+}));
+
+vi.mock('../../lib/blotato', () => ({
+    blotatoPublish: vi.fn().mockResolvedValue({
+        id: 'blotato-post-1',
+        status: 'queued',
+        platforms: [{ platform: 'youtube', status: 'pending' }],
+    }),
+    blotatoGetQueue: vi.fn().mockResolvedValue([]),
+    blotatoGetPost: vi.fn().mockResolvedValue({ id: 'blotato-post-1', status: 'queued', platforms: [] }),
+    blotatoCancelPost: vi.fn().mockResolvedValue({ success: true }),
+    blotatoListAccounts: vi.fn().mockResolvedValue([]),
 }));
 
 // Mock Anthropic claude lib
@@ -124,6 +136,7 @@ beforeAll(() => {
     process.env.DATABASE_PATH = ':memory:';
     process.env.JWT_SECRET = 'test-jwt-secret-32-chars-minimum!';
     process.env.DASHBOARD_PASSWORD = 'test-password';
+    process.env.BLOTATO_API_KEY = 'test-blotato-key';
 });
 
 // ── Tests ─────────────────────────────────────────────────────────
@@ -288,6 +301,113 @@ describe('POST /api/generate — content generation (admin auth, mocked AI)', ()
             .send({ episodeId: 'ep-001', platform: 'twitter' });
 
         expect(res.status).toBe(401);
+    });
+});
+
+describe('Video job routes', () => {
+    let app: Application;
+    let server: Server;
+
+    beforeAll(async () => { ({ app, server } = await makeApp()); });
+    afterAll(async () => { await closeServer(server); });
+
+    it('creates a rendered short-form video job', async () => {
+        const res = await request(app)
+            .post('/api/video/shorts/render')
+            .set('X-API-Key', ADMIN_KEY)
+            .send({
+                theme: 'FlipMyEra virtual influencer launch',
+                script: 'Your alternate era starts now.',
+                platformTargets: ['youtube', 'tiktok'],
+                coverImageUrl: 'https://cdn.test/cover.jpg',
+            });
+
+        expect(res.status).toBe(201);
+        expect(res.body.status).toBe('rendered');
+        expect(res.body.publishingStatus).toBe('pending_approval');
+        expect(res.body.videoUrl).toBe('https://fal.test/video.mp4');
+        expect(res.body.platformTargets).toEqual(['youtube', 'tiktok']);
+
+        const fetchRes = await request(app)
+            .get(`/api/video/jobs/${res.body.id}`)
+            .set('X-API-Key', ADMIN_KEY);
+        expect(fetchRes.status).toBe(200);
+        expect(fetchRes.body.id).toBe(res.body.id);
+    });
+
+    it('rejects publishing before approval, then publishes after approval', async () => {
+        const renderRes = await request(app)
+            .post('/api/video/shorts/render')
+            .set('X-API-Key', ADMIN_KEY)
+            .send({ theme: 'Approval workflow', platformTargets: ['youtube'] });
+        const id = renderRes.body.id;
+
+        const blocked = await request(app)
+            .post(`/api/video/jobs/${id}/publish`)
+            .set('X-API-Key', ADMIN_KEY)
+            .send({});
+        expect(blocked.status).toBe(400);
+        expect(blocked.body.error).toContain('must be approved');
+
+        const approved = await request(app)
+            .post(`/api/video/jobs/${id}/approve`)
+            .set('X-API-Key', ADMIN_KEY)
+            .send({});
+        expect(approved.status).toBe(200);
+        expect(approved.body.publishingStatus).toBe('approved');
+
+        const published = await request(app)
+            .post(`/api/video/jobs/${id}/publish`)
+            .set('X-API-Key', ADMIN_KEY)
+            .send({});
+        expect(published.status).toBe(200);
+        expect(published.body.publishingStatus).toBe('published');
+        expect(published.body.blotatoResult.id).toBe('blotato-post-1');
+    });
+});
+
+describe('n8n video webhooks', () => {
+    let app: Application;
+    let server: Server;
+
+    beforeAll(async () => {
+        process.env.WEBHOOK_SECRET = 'test-webhook-secret';
+        ({ app, server } = await makeApp());
+    });
+    afterAll(async () => {
+        delete process.env.WEBHOOK_SECRET;
+        await closeServer(server);
+    });
+
+    it('requires webhook secret for video render webhook', async () => {
+        const res = await request(app)
+            .post('/webhooks/n8n/video')
+            .send({ theme: 'Webhook video' });
+
+        expect(res.status).toBe(401);
+    });
+
+    it('creates a rendered job from n8n video webhook', async () => {
+        const res = await request(app)
+            .post('/webhooks/n8n/video')
+            .set('X-Webhook-Secret', 'test-webhook-secret')
+            .send({ theme: 'Webhook video', platformTargets: ['tiktok'] });
+
+        expect(res.status).toBe(201);
+        expect(res.body.success).toBe(true);
+        expect(res.body.data.status).toBe('rendered');
+        expect(res.body.data.platformTargets).toEqual(['tiktok']);
+    });
+
+    it('publishes approved jobs only from n8n webhook', async () => {
+        const res = await request(app)
+            .post('/webhooks/n8n/video/publish-approved')
+            .set('X-Webhook-Secret', 'test-webhook-secret')
+            .send({});
+
+        expect(res.status).toBe(200);
+        expect(res.body.success).toBe(true);
+        expect(res.body.published).toBeGreaterThanOrEqual(0);
     });
 });
 

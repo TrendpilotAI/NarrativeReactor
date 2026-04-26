@@ -73,6 +73,25 @@ describe('fal', () => {
   });
 
   describe('generateVideo', () => {
+    it('sends vertical short-form defaults to Fal.ai', async () => {
+      mockSubscribe.mockResolvedValue({
+        data: { video: { url: 'https://example.com/short.mp4' } },
+      });
+      const { generateVideo } = await import('../../lib/fal');
+      await generateVideo({ prompt: 'a virtual influencer intro', platform: 'tiktok' });
+
+      expect(mockSubscribe).toHaveBeenCalledWith(
+        expect.any(String),
+        expect.objectContaining({
+          input: expect.objectContaining({
+            aspect_ratio: '9:16',
+            duration: 30,
+            resolution: '720p',
+          }),
+        }),
+      );
+    });
+
     it('happy path — result.data.video.url', async () => {
       mockSubscribe.mockResolvedValue({
         data: { video: { url: 'https://example.com/vid.mp4' } },
@@ -105,7 +124,7 @@ describe('fal', () => {
       mockGetPricing.mockResolvedValue([{ unit_price: 0.01, unit: 'second' }]);
       const { generateVideo } = await import('../../lib/fal');
       const result = await generateVideo('a cat');
-      expect(result.cost).toBe(0.05); // 0.01 * 5 seconds
+      expect(result.cost).toBe(0.3); // 0.01 * 30 seconds
     });
   });
 });

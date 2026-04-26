@@ -21,10 +21,11 @@ vi.mock('fs', () => ({
 const mockDbs: Database.Database[] = [];
 vi.mock('better-sqlite3', async () => {
     const actual = await vi.importActual<typeof import('better-sqlite3')>('better-sqlite3');
+    const ActualDatabase = (actual as any).default || actual;
     return {
-        default: vi.fn().mockImplementation((_path: string) => {
+        default: vi.fn().mockImplementation(function MockDatabase(_path: string) {
             // Always create in-memory DB regardless of path
-            const db = new actual.default(':memory:');
+            const db = new ActualDatabase(':memory:');
             mockDbs.push(db);
             return db;
         }),
@@ -72,7 +73,7 @@ describe('database.ts', () => {
     });
 
     describe('initSchema()', () => {
-        it('creates all 4 required tables', () => {
+        it('creates all required tables', () => {
             const db = dbModule.getDatabase();
 
             const tables = db.prepare(
@@ -84,16 +85,17 @@ describe('database.ts', () => {
             expect(tableNames).toContain('content_posts');
             expect(tableNames).toContain('integrations');
             expect(tableNames).toContain('settings');
+            expect(tableNames).toContain('video_render_jobs');
         });
 
-        it('seeds 5 default integrations', () => {
+        it('seeds default integrations', () => {
             const db = dbModule.getDatabase();
 
             const integrations = db.prepare(
                 'SELECT * FROM integrations ORDER BY id'
             ).all() as Array<{ id: string; provider: string; name: string; connected: number }>;
 
-            expect(integrations).toHaveLength(5);
+            expect(integrations).toHaveLength(7);
 
             const providers = integrations.map(i => i.provider);
             expect(providers).toContain('x');
@@ -101,6 +103,8 @@ describe('database.ts', () => {
             expect(providers).toContain('threads');
             expect(providers).toContain('instagram');
             expect(providers).toContain('facebook');
+            expect(providers).toContain('youtube');
+            expect(providers).toContain('tiktok');
 
             // All should start as disconnected
             for (const int of integrations) {

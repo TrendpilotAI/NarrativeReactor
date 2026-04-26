@@ -4,7 +4,6 @@
  * Docs: https://docs.blotato.com (inferred from API patterns)
  */
 
-const BLOTATO_API_KEY = process.env.BLOTATO_API_KEY || 'blt_rcytWk1X4BNvUZ3l0cIWHg44AZP9v15RwhW2bd3TSfw=';
 const BLOTATO_BASE_URL = process.env.BLOTATO_BASE_URL || 'https://api.blotato.com/v1';
 
 export interface BlotatoPostRequest {
@@ -13,9 +12,12 @@ export interface BlotatoPostRequest {
   mediaUrls?: string[];
   scheduledAt?: string; // ISO 8601 — omit for immediate
   title?: string; // For blog/LinkedIn article
+  thumbnailUrl?: string;
+  hashtags?: string[];
+  metadata?: Record<string, any>;
 }
 
-export type BlotatoPlatform = 'x' | 'linkedin' | 'instagram' | 'threads' | 'facebook' | 'bluesky';
+export type BlotatoPlatform = 'x' | 'linkedin' | 'instagram' | 'threads' | 'facebook' | 'bluesky' | 'youtube' | 'tiktok';
 
 export interface BlotatoPostResult {
   id: string;
@@ -42,11 +44,16 @@ export interface BlotatoQueueItem {
 }
 
 async function blotatoFetch<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
+  const apiKey = process.env.BLOTATO_API_KEY;
+  if (!apiKey) {
+    throw new Error('BLOTATO_API_KEY is required for Blotato publishing');
+  }
+
   const url = `${BLOTATO_BASE_URL}${endpoint}`;
   const res = await fetch(url, {
     ...options,
     headers: {
-      'Authorization': `Bearer ${BLOTATO_API_KEY}`,
+      'Authorization': `Bearer ${apiKey}`,
       'Content-Type': 'application/json',
       ...options.headers,
     },
@@ -65,6 +72,11 @@ async function blotatoFetch<T>(endpoint: string, options: RequestInit = {}): Pro
  * If scheduledAt is provided, the post is queued for that time.
  */
 export async function blotatoPublish(req: BlotatoPostRequest): Promise<BlotatoPostResult> {
+  const videoPlatforms = req.platforms.filter(platform => platform === 'youtube' || platform === 'tiktok');
+  if (videoPlatforms.length > 0 && (!req.mediaUrls || req.mediaUrls.length === 0)) {
+    throw new Error(`Video platforms require at least one media URL: ${videoPlatforms.join(', ')}`);
+  }
+
   return blotatoFetch<BlotatoPostResult>('/posts', {
     method: 'POST',
     body: JSON.stringify({
@@ -73,6 +85,9 @@ export async function blotatoPublish(req: BlotatoPostRequest): Promise<BlotatoPo
       media_urls: req.mediaUrls,
       scheduled_at: req.scheduledAt,
       title: req.title,
+      thumbnail_url: req.thumbnailUrl,
+      hashtags: req.hashtags,
+      metadata: req.metadata,
     }),
   });
 }

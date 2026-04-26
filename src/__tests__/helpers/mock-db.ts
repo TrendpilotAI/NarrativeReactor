@@ -31,6 +31,7 @@ export function setupTestDb(): Database.Database {
  */
 export function resetTestDb(): void {
     if (!testDb) return;
+    testDb.exec('DELETE FROM video_render_jobs');
     testDb.exec('DELETE FROM media_assets');
     testDb.exec('DELETE FROM content_posts');
     testDb.exec('DELETE FROM integrations');
@@ -128,6 +129,32 @@ function initTestSchema(db: Database.Database) {
         )
     `);
 
+    db.exec(`
+        CREATE TABLE IF NOT EXISTS video_render_jobs (
+            id TEXT PRIMARY KEY,
+            status TEXT NOT NULL CHECK(status IN ('queued', 'rendering', 'rendered', 'failed')),
+            publishing_status TEXT NOT NULL CHECK(publishing_status IN ('pending_approval', 'approved', 'rejected', 'published', 'scheduled', 'failed')),
+            persona TEXT,
+            channel TEXT,
+            theme TEXT NOT NULL,
+            script TEXT,
+            prompt TEXT NOT NULL,
+            platform_targets TEXT NOT NULL,
+            aspect_ratio TEXT NOT NULL,
+            duration_seconds INTEGER NOT NULL,
+            video_url TEXT,
+            thumbnail_url TEXT,
+            captions_json TEXT,
+            score_json TEXT,
+            blotato_result_json TEXT,
+            error TEXT,
+            scheduled_at TEXT,
+            created_at TEXT DEFAULT (datetime('now')),
+            updated_at TEXT DEFAULT (datetime('now')),
+            metadata TEXT
+        )
+    `);
+
     seedDefaultIntegrations(db);
 }
 
@@ -143,6 +170,8 @@ function seedDefaultIntegrations(db: Database.Database) {
         { id: 'threads', provider: 'threads', name: 'Threads' },
         { id: 'instagram', provider: 'instagram', name: 'Instagram' },
         { id: 'facebook', provider: 'facebook', name: 'Facebook' },
+        { id: 'youtube', provider: 'youtube', name: 'YouTube' },
+        { id: 'tiktok', provider: 'tiktok', name: 'TikTok' },
     ];
 
     for (const int of integrations) {

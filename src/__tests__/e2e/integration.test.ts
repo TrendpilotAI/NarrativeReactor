@@ -203,8 +203,8 @@ describe('E2E: Video Pipeline', () => {
       characters: ['Maya'],
     });
 
-    // Pipeline completes despite video failure
-    expect(result.orchestrationStatus).toBe('COMPLETE');
+    expect(result.orchestrationStatus).toBe('PARTIAL');
+    expect(result.video.status).toBe('failed');
     expect(result.scene).toBeDefined();
   });
 });

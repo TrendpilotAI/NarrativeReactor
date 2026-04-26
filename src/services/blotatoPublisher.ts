@@ -20,6 +20,10 @@ export interface PublishDraftRequest {
   format: 'xThread' | 'linkedinPost' | 'blogArticle';
   scheduledAt?: string; // ISO 8601 for scheduled publishing
   mediaUrls?: string[];
+  title?: string;
+  thumbnailUrl?: string;
+  hashtags?: string[];
+  metadata?: Record<string, any>;
 }
 
 export interface PublishDraftResult {
@@ -51,6 +55,10 @@ export async function publishDraftViaBlotato(req: PublishDraftRequest): Promise<
     content,
     scheduledAt: req.scheduledAt,
     mediaUrls: req.mediaUrls,
+    title: req.title,
+    thumbnailUrl: req.thumbnailUrl,
+    hashtags: req.hashtags,
+    metadata: req.metadata,
   });
 
   // Mark as published if immediate
@@ -73,12 +81,17 @@ export async function publishContentViaBlotato(
   platforms: BlotatoPlatform[],
   scheduledAt?: string,
   mediaUrls?: string[],
+  options: { title?: string; thumbnailUrl?: string; hashtags?: string[]; metadata?: Record<string, any> } = {},
 ): Promise<BlotatoPostResult> {
   return blotatoPublish({
     platforms,
     content,
     scheduledAt,
     mediaUrls,
+    title: options.title,
+    thumbnailUrl: options.thumbnailUrl,
+    hashtags: options.hashtags,
+    metadata: options.metadata,
   });
 }
 

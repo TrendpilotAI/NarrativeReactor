@@ -40,7 +40,7 @@ describe('generateCopyClaude', () => {
     expect(result).toBe('🚀 Maya unlocks the future. #SignalStudio #AI');
     expect(mockCreate).toHaveBeenCalledWith(
       expect.objectContaining({
-        model: 'claude-3-5-sonnet-20240620',
+        model: 'claude-sonnet-4-20250514',
         max_tokens: 1024,
         system: expect.stringContaining('Professional tone'),
       })

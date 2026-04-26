@@ -315,7 +315,9 @@ export class LinkedInProvider implements SocialProvider {
             headers: { 'Authorization': `Bearer ${accessToken}` },
         });
         const meData = await meRes.json();
-        const authorUrn = `urn:li:person:${meData.sub}`;
+        const authorUrn = String(meData.sub).startsWith('urn:li:person:')
+            ? meData.sub
+            : `urn:li:person:${meData.sub}`;
 
         const postBody = {
             author: authorUrn,
@@ -454,8 +456,8 @@ class StubProvider implements SocialProvider {
     }
 }
 
-// LinkedIn Provider implementation
-class LinkedInProvider implements SocialProvider {
+// LinkedIn Provider implementation used by the default provider registry.
+class ConfiguredLinkedInProvider implements SocialProvider {
     identifier = 'linkedin';
     name = 'LinkedIn';
 
@@ -537,7 +539,9 @@ class LinkedInProvider implements SocialProvider {
         }
 
         const meData = await meResponse.json();
-        const urn = `urn:li:person:${meData.sub}`;
+        const urn = String(meData.sub).startsWith('urn:li:person:')
+            ? meData.sub
+            : `urn:li:person:${meData.sub}`;
 
         const postResponse = await fetch('https://api.linkedin.com/v2/ugcPosts', {
             method: 'POST',
@@ -1024,7 +1028,7 @@ class FacebookProvider implements SocialProvider {
 
 export const providers: Record<string, SocialProvider> = {
     x: new XProvider(),
-    linkedin: new LinkedInProvider(),
+    linkedin: new ConfiguredLinkedInProvider(),
     instagram: new InstagramProvider(),
     threads: new ThreadsProvider(),
     facebook: new FacebookProvider(),
