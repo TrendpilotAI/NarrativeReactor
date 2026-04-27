@@ -27,6 +27,9 @@ const mockSocialPost = vi.fn();
 const mockSocialPerformance = vi.fn();
 const mockListIntegrationsTool = vi.fn();
 const mockOsintResearch = vi.fn();
+const mockOsintVisualSearch = vi.fn();
+const mockOsintSentiment = vi.fn();
+const mockDossierEnrichment = vi.fn();
 
 vi.mock('../../lib/agents', () => ({
   sceneGenerationTool: mockSceneGen,
@@ -38,6 +41,9 @@ vi.mock('../../lib/agents', () => ({
   socialPerformanceTool: mockSocialPerformance,
   listIntegrationsTool: mockListIntegrationsTool,
   osintResearchTool: mockOsintResearch,
+  osintVisualSearchTool: mockOsintVisualSearch,
+  osintSentimentTool: mockOsintSentiment,
+  dossierEnrichmentTool: mockDossierEnrichment,
 }));
 
 // Mock integration flows
@@ -58,7 +64,7 @@ describe('videoGenerationFlow', () => {
     mockNarrativeAssembly.mockResolvedValue({ narrative: 'Maya enters...' });
     mockScoreGen.mockResolvedValue({ score: 'Cinematic pulse' });
     mockPrevisImage.mockResolvedValue({ imageUrl: 'https://example.com/img.png' });
-    mockVideoGen.mockResolvedValue({ videoUrl: 'https://example.com/vid.mp4' });
+    mockVideoGen.mockResolvedValue({ status: 'rendered', videoUrl: 'https://example.com/vid.mp4' });
   });
 
   it('should orchestrate all tools in parallel and return results', async () => {
@@ -98,8 +104,8 @@ describe('videoGenerationFlow', () => {
       characters: ['Maya'],
     });
 
-    // Should still complete despite video failure
-    expect(result.orchestrationStatus).toBe('COMPLETE');
+    expect(result.orchestrationStatus).toBe('PARTIAL');
+    expect(result.video.status).toBe('failed');
     expect(result.scene).toBeDefined();
   });
 

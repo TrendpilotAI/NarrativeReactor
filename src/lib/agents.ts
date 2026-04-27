@@ -245,7 +245,7 @@ export const osintVisualSearchTool = ai.defineTool(
                 body: JSON.stringify({ q: input.query }),
             });
 
-            if (!response.ok) {
+            if (response.ok === false) {
                 throw new Error(`Serper API error: ${response.status} ${response.statusText}`);
             }
 
@@ -296,7 +296,7 @@ export const osintSentimentTool = ai.defineTool(
                 body: JSON.stringify({ q: query }),
             });
 
-            if (!response.ok) {
+            if (response.ok === false) {
                 throw new Error(`Serper API error: ${response.status} ${response.statusText}`);
             }
 
@@ -348,7 +348,7 @@ export const dossierEnrichmentTool = ai.defineTool(
                 body: JSON.stringify({ q: query }),
             });
 
-            if (!response.ok) {
+            if (response.ok === false) {
                 throw new Error(`Serper API error: ${response.status} ${response.statusText}`);
             }
 
@@ -377,23 +377,34 @@ export const videoGenTool = ai.defineTool(
         inputSchema: z.object({
             sceneDescription: z.string(),
             imageUrl: z.string().optional().describe('Optional starting frame URL'),
+            platform: z.enum(['youtube', 'tiktok', 'instagram', 'twitter', 'linkedin']).optional(),
+            aspectRatio: z.enum(['9:16', '16:9', '1:1', '4:5']).optional(),
+            durationSeconds: z.number().optional(),
             modelId: z.string().optional().describe('Fal.ai model ID (default: seedance 1.5 pro)'),
         }),
         outputSchema: z.any(),
     },
     async (input) => {
         try {
-            const result = await generateVideo(input.sceneDescription, input.imageUrl, input.modelId);
+            const result = await generateVideo({
+                prompt: input.sceneDescription,
+                imageUrl: input.imageUrl,
+                platform: input.platform || 'tiktok',
+                aspectRatio: input.aspectRatio || '9:16',
+                durationSeconds: input.durationSeconds || 30,
+                modelId: input.modelId,
+            });
             return {
                 prompt: input.sceneDescription,
                 videoUrl: result.url,
                 modelId: result.modelId,
                 cost: result.cost,
                 duration: result.duration,
-                status: 'generated'
+                status: 'rendered',
+                metadata: result.metadata,
             };
         } catch (e: any) {
-            return { error: e.message };
+            return { status: 'failed', error: e.message };
         }
     }
 );

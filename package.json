@@ -10,13 +10,14 @@
     "docs:serve": "mkdocs serve",
     "docs:build": "mkdocs build",
     "docs:deploy": "mkdocs gh-deploy --force",
-    "test": "vitest run",
-    "test:watch": "vitest",
-    "test:coverage": "vitest run --coverage",
-    "test:ci": "vitest run --coverage --reporter=junit --outputFile=test-results.xml",
+    "test": "NODE_OPTIONS=--experimental-sqlite vitest run",
+    "test:watch": "NODE_OPTIONS=--experimental-sqlite vitest",
+    "test:coverage": "NODE_OPTIONS=--experimental-sqlite vitest run --coverage",
+    "test:ci": "NODE_OPTIONS=--experimental-sqlite vitest run --coverage --reporter=junit --outputFile=test-results.xml",
     "prepare": "husky",
     "lint": "eslint 'src/**/*.ts'",
     "lint:fix": "eslint 'src/**/*.ts' --fix",
+    "sandbox:video": "tsx scripts/live-sandbox-video-workflow.ts",
     "postinstall": "sed -i 's/\\[key: string\\]: string | string\\[\\];/[key: string]: string;/' node_modules/@types/express-serve-static-core/index.d.ts 2>/dev/null || true"
   },
   "lint-staged": {
@@ -52,6 +53,7 @@
     "zod": "^3.22.0"
   },
   "devDependencies": {
+    "@eslint/js": "^9.39.4",
     "@types/express": "^5.0.6",
     "@types/node": "^25.4.0",
     "@types/supertest": "^7.2.0",
@@ -61,11 +63,15 @@
     "eslint": "^9.0.0",
     "firebase-tools": "^15.3.0",
     "genkit-cli": "^1.29.0",
+    "globals": "^17.5.0",
     "husky": "^9.1.7",
     "lint-staged": "^15.5.2",
     "supertest": "^7.2.2",
     "tsx": "^4.21.0",
     "typescript": "^5.9.3",
     "vitest": "^4.1.0"
+  },
+  "overrides": {
+    "protobufjs": "^7.5.5"
   }
 }

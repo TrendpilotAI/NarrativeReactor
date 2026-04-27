@@ -15,6 +15,8 @@ import {
     osintSentimentTool,
     dossierEnrichmentTool
 } from '../lib/agents';
+import { generateCaptions } from '../services/captionGenerator';
+import { generateThumbnail } from '../services/thumbnailGenerator';
 
 /**
  * Video Generation Flow
@@ -32,6 +34,10 @@ export const videoGenerationFlow = ai.defineFlow(
             narrative: z.any(),
             score: z.any(),
             previs: z.any(),
+            script: z.string().optional(),
+            captions: z.any().optional(),
+            thumbnail: z.any().optional(),
+            video: z.any().optional(),
             orchestrationStatus: z.string(),
             timestamp: z.string(),
         }),
@@ -58,27 +64,44 @@ export const videoGenerationFlow = ai.defineFlow(
             }),
         ]);
 
+        const script = typeof narrative === 'string' ? narrative : JSON.stringify(narrative);
+        const captions = generateCaptions(script || input.theme, { format: 'srt' });
+        const thumbnail = previs?.imageUrl
+            ? generateThumbnail(previs.imageUrl, input.theme, input.characters[0] || 'Maya Chen', 'bold')
+            : undefined;
+
         // Sequential: Generate Video using the Scene description and Previs Image
-        let videoResult = null;
+        let videoResult: any = { status: 'failed', error: 'Video generation did not run' };
         try {
             const sceneDesc = typeof scene === 'string' ? scene : JSON.stringify(scene);
             const imageUrl = previs?.imageUrl;
 
             videoResult = await videoGenTool({
                 sceneDescription: sceneDesc.substring(0, 500), // Truncate for safety
-                imageUrl: imageUrl
+                imageUrl: imageUrl,
+                platform: 'tiktok',
+                aspectRatio: '9:16',
+                durationSeconds: 30,
             });
         } catch (e) {
             console.error("Video generation failed:", e);
+            videoResult = {
+                status: 'failed',
+                error: e instanceof Error ? e.message : String(e),
+            };
         }
+        const videoFailed = !videoResult || videoResult.status === 'failed' || Boolean(videoResult.error);
 
         return {
             scene,
             narrative,
             score,
             previs,
+            script,
+            captions,
+            thumbnail,
             video: videoResult,
-            orchestrationStatus: 'COMPLETE',
+            orchestrationStatus: videoFailed ? 'PARTIAL' : 'COMPLETE',
             timestamp: new Date().toISOString(),
         };
     }
@@ -146,6 +169,18 @@ export const agenticChatFlow = ai.defineFlow(
             ],
         });
 
+        const toolOutputs = result.messages
+            ?.flatMap(m => m.content || [])
+            .filter(part => part.toolResponse)
+            .map(part => ({
+                name: part.toolResponse?.name,
+                output: part.toolResponse?.output
+            })) || result.toolRequests
+            ?.map((part: any) => ({
+                name: part.toolRequest?.name,
+                output: part.toolRequest?.input,
+            })) || [];
+
         return {
             response: result.text,
             suggestedActions: [
@@ -153,13 +188,7 @@ export const agenticChatFlow = ai.defineFlow(
                 'Generate Pacing for Narrative',
                 'Design High-Intensity Score'
             ],
-            toolOutputs: result.messages
-                ?.flatMap(m => m.content || [])
-                .filter(part => part.toolResponse)
-                .map(part => ({
-                    name: part.toolResponse?.name,
-                    output: part.toolResponse?.output
-                })) || []
+            ...(toolOutputs.length > 0 ? { toolOutputs } : {})
         };
     }
 );

@@ -6,7 +6,7 @@ import { postToSocialFlow, listIntegrationsFlow, getPerformanceDataFlow, getMent
 import { schedulePost, getSchedule, cancelPost } from '../services/calendar';
 import { publishToAll } from '../services/publisher';
 import { trackPost, getPostPerformance, getBestPerformingContent, getOptimalPostingTimes } from '../services/performanceTracker';
-import { saveContent, searchContent, getContentByTag, getContentStats } from '../services/contentLibrary';
+import { saveContent, searchContent, getContentById, getContentByTag, getContentStats } from '../services/contentLibrary';
 import { receiveMessage, getMessageLog, sendMessage, getRegisteredAgents } from '../services/agentComm';
 import { fetchTrendingTopics, generateBriefFromTrend, autoGenerateContent } from '../services/trendpilotBridge';
 import { createCampaign, getCampaign, listCampaigns, advanceCampaign, deleteCampaign } from '../services/campaigns';
@@ -21,6 +21,18 @@ import { createVideoProject, generateStitchingScript, getProjectTimeline } from 
 import { generateSubtitles, generateVTT, embedSubtitles } from '../services/subtitles';
 import { getTemplate, listTemplates, TemplateType } from '../services/videoTemplates';
 import { generateThumbnail } from '../services/thumbnailGenerator';
+import {
+    approveVideoJob,
+    getVideoJob,
+    listVideoJobs,
+    publishApprovedVideoJob,
+    publishApprovedVideoJobs,
+    rejectVideoJob,
+    renderShortFormVideo,
+    ShortFormPlatform,
+    VideoRenderStatus,
+    PublishingStatus,
+} from '../services/videoJobs';
 import { createBrand, getBrand, listBrands, updateBrand, deleteBrand } from '../services/brandManager';
 import { analyzeBrandVoice, generateWithVoice, scoreBrandConsistency } from '../services/brandVoice';
 import { submitForReview, approveContent, rejectContent, getReviewQueue, getReviewByContentId } from '../services/approvalWorkflow';
@@ -483,6 +495,81 @@ router.post('/personas/build', asyncHandler(async (req: Request, res: Response) 
 }));
 
 // ==================== Advanced Video Pipeline ====================
+
+// POST /api/video/shorts/render — create and render a 9:16 short-form video job
+router.post('/video/shorts/render', asyncHandler(async (req: Request, res: Response) => {
+    const { theme, platformTargets } = req.body;
+    if (!theme) {
+        res.status(400).json({ error: 'Missing required field: theme' });
+        return;
+    }
+    if (platformTargets && (!Array.isArray(platformTargets) || platformTargets.some((p: string) => p !== 'youtube' && p !== 'tiktok'))) {
+        res.status(400).json({ error: 'platformTargets must contain only youtube and/or tiktok' });
+        return;
+    }
+
+    const job = await renderShortFormVideo({
+        ...req.body,
+        platformTargets: platformTargets as ShortFormPlatform[] | undefined,
+    });
+    res.status(job.status === 'rendered' ? 201 : 202).json(job);
+}));
+
+// GET /api/video/jobs — list video jobs
+router.get('/video/jobs', asyncHandler(async (req: Request, res: Response) => {
+    const status = req.query.status as VideoRenderStatus | undefined;
+    const publishingStatus = req.query.publishingStatus as PublishingStatus | undefined;
+    res.json(listVideoJobs(status, publishingStatus));
+}));
+
+// GET /api/video/jobs/:id — fetch a video job
+router.get('/video/jobs/:id', asyncHandler(async (req: Request, res: Response) => {
+    const job = getVideoJob(req.params.id as string);
+    if (!job) {
+        res.status(404).json({ error: 'Video job not found' });
+        return;
+    }
+    res.json(job);
+}));
+
+// POST /api/video/jobs/:id/approve — approve rendered video for publishing
+router.post('/video/jobs/:id/approve', asyncHandler(async (req: Request, res: Response) => {
+    try {
+        res.json(approveVideoJob(req.params.id as string));
+    } catch (error: any) {
+        res.status(error.message?.includes('not found') ? 404 : 400).json({ error: error.message });
+    }
+}));
+
+// POST /api/video/jobs/:id/reject — reject rendered video
+router.post('/video/jobs/:id/reject', asyncHandler(async (req: Request, res: Response) => {
+    try {
+        res.json(rejectVideoJob(req.params.id as string, req.body?.reason));
+    } catch (error: any) {
+        res.status(error.message?.includes('not found') ? 404 : 400).json({ error: error.message });
+    }
+}));
+
+// POST /api/video/jobs/:id/publish — approval-gated publish via Blotato
+router.post('/video/jobs/:id/publish', asyncHandler(async (req: Request, res: Response) => {
+    try {
+        const job = await publishApprovedVideoJob(req.params.id as string, req.body || {});
+        res.json(job);
+    } catch (error: any) {
+        res.status(error.message?.includes('not found') ? 404 : 400).json({ error: error.message });
+    }
+}));
+
+// POST /api/video/jobs/publish-approved — publish all approved rendered jobs
+router.post('/video/jobs/publish-approved', asyncHandler(async (req: Request, res: Response) => {
+    if (req.body?.dryRun === true) {
+        const jobs = listVideoJobs('rendered', 'approved');
+        res.json({ dryRun: true, publishable: jobs.length, jobs });
+        return;
+    }
+    const jobs = await publishApprovedVideoJobs();
+    res.json({ published: jobs.length, jobs });
+}));
 
 // POST /api/video/project — create video project + get stitching script & timeline
 router.post('/video/project', asyncHandler(async (req: Request, res: Response) => {

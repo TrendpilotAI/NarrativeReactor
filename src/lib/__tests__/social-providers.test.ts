@@ -74,32 +74,42 @@ describe('social-providers.ts', () => {
 
         describe('generateAuthUrl()', () => {
             it('generates an auth URL with correct callback', async () => {
-                mockGenerateAuthLink.mockResolvedValueOnce({
-                    url: 'https://api.twitter.com/oauth/authenticate?oauth_token=abc',
-                    oauth_token: 'oauth_abc',
-                    oauth_token_secret: 'secret_xyz',
-                });
-
                 const result = await xProvider.generateAuthUrl();
                 expect(result.url).toContain('twitter.com');
-                expect(result.codeVerifier).toBe('oauth_abc:secret_xyz');
-                expect(result.state).toBe('oauth_abc');
+                expect(result.url).toContain('response_type=code');
+                expect(result.url).toContain('code_challenge_method=S256');
+                expect(result.codeVerifier).toEqual(expect.any(String));
+                expect(result.codeVerifier.length).toBeGreaterThan(20);
+                expect(result.state).toEqual(expect.any(String));
             });
         });
 
         describe('post()', () => {
             it('posts a tweet and returns post info', async () => {
-                mockTweet.mockResolvedValueOnce({
-                    data: { id: 'tweet-123' },
-                });
-                mockMe.mockResolvedValueOnce({
-                    data: { username: 'testuser' },
-                });
+                const mockFetch = vi.fn()
+                    .mockResolvedValueOnce({
+                        ok: true,
+                        json: async () => ({ data: { id: 'tweet-123' } }),
+                    })
+                    .mockResolvedValueOnce({
+                        ok: true,
+                        json: async () => ({ data: { username: 'testuser' } }),
+                    });
+                vi.stubGlobal('fetch', mockFetch);
 
-                const result = await xProvider.post('token:secret', 'Hello from NarrativeReactor!');
+                const result = await xProvider.post('access-token', 'Hello from NarrativeReactor!');
                 expect(result.postId).toBe('tweet-123');
                 expect(result.releaseURL).toContain('testuser/status/tweet-123');
                 expect(result.status).toBe('posted');
+                expect(mockFetch).toHaveBeenCalledWith(
+                    'https://api.twitter.com/2/tweets',
+                    expect.objectContaining({
+                        method: 'POST',
+                        headers: expect.objectContaining({
+                            Authorization: 'Bearer access-token',
+                        }),
+                    }),
+                );
             });
         });
     });

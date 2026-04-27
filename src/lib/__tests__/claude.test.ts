@@ -13,11 +13,11 @@ const { mockCreate } = vi.hoisted(() => ({
 
 // Mock the Anthropic SDK
 vi.mock('@anthropic-ai/sdk', () => ({
-    default: vi.fn().mockImplementation(() => ({
-        messages: {
+    default: class {
+        messages = {
             create: mockCreate,
-        },
-    })),
+        };
+    },
 }));
 
 import { generateCopyClaude, GenerateCopySchema } from '../claude';

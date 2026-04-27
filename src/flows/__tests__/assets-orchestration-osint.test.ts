@@ -222,8 +222,8 @@ describe('Video Generation Flow', () => {
             characters: ['Maya'],
         });
 
-        // Flow should still complete
-        expect(result.orchestrationStatus).toBe('COMPLETE');
+        expect(result.orchestrationStatus).toBe('PARTIAL');
+        expect(result.video.status).toBe('failed');
         expect(result.scene).toBeDefined();
     });
 });

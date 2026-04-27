@@ -241,7 +241,7 @@ describe('agents.ts', () => {
             });
 
             expect(result.videoUrl).toBe('https://cdn.fal.ai/video.mp4');
-            expect(result.status).toBe('generated');
+            expect(result.status).toBe('rendered');
         });
 
         it('returns error on video generation failure', async () => {
