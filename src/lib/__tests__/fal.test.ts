@@ -161,6 +161,74 @@ describe('fal.ts', () => {
             expect(saved.prompt).toBe('Action scene');
         });
 
+        it('uses image input only for image-to-video models', async () => {
+            mockSubscribe.mockResolvedValueOnce({
+                video: { url: 'https://cdn.fal.ai/i2v.mp4' },
+            });
+
+            const result = await generateVideo({
+                prompt: 'Animated cover frame',
+                imageUrl: 'https://cdn.fal.ai/cover.png',
+                modelId: 'fal-ai/kling/image-to-video',
+                aspectRatio: '1:1',
+                durationSeconds: 61,
+                platform: 'youtube',
+                sourceJobId: 'job-123',
+            });
+
+            const [, options] = mockSubscribe.mock.calls[0];
+            expect(options.input).toMatchObject({
+                image_url: 'https://cdn.fal.ai/cover.png',
+                aspect_ratio: '1:1',
+                duration: 60,
+            });
+            expect(result.metadata).toMatchObject({
+                startImageUsed: true,
+                targetDurationSeconds: 60,
+                renderDurationSeconds: 60,
+                sourceJobId: 'job-123',
+            });
+        });
+
+        it('ignores start images for text-only models and clamps low durations', async () => {
+            mockSubscribe.mockResolvedValueOnce({
+                video: { url: 'https://cdn.fal.ai/text-only.mp4' },
+            });
+
+            const result = await generateVideo({
+                prompt: 'Text-only render',
+                imageUrl: 'https://cdn.fal.ai/cover.png',
+                modelId: 'fal-ai/bytedance/seedance/v1.5/pro/text-to-video',
+                durationSeconds: 4,
+                platform: 'linkedin',
+            });
+
+            const [, options] = mockSubscribe.mock.calls[0];
+            expect(options.input.image_url).toBeUndefined();
+            expect(options.input.duration).toBe('12');
+            expect(result.metadata).toMatchObject({
+                startImageUsed: false,
+                targetDurationSeconds: 30,
+                renderDurationSeconds: 12,
+            });
+            expect(mockMediaSave.mock.calls[0][0].metadata.ignoredImageUrl).toBe(true);
+        });
+
+        it('keeps successful video results when pricing and persistence fail', async () => {
+            mockSubscribe.mockResolvedValueOnce({
+                video: { url: 'https://cdn.fal.ai/no-cost.mp4' },
+            });
+            mockGetPricing.mockRejectedValueOnce(new Error('pricing unavailable'));
+            mockMediaSave.mockImplementationOnce(() => {
+                throw new Error('database unavailable');
+            });
+
+            const result = await generateVideo('Still return the render');
+
+            expect(result.url).toBe('https://cdn.fal.ai/no-cost.mp4');
+            expect(result.cost).toBe(0);
+        });
+
         it('calculates cost per second when unit is "second"', async () => {
             mockSubscribe.mockResolvedValueOnce({
                 video: { url: 'https://cdn.fal.ai/vid.mp4' },

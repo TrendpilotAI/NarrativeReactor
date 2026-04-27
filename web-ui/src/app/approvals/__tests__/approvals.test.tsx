@@ -17,8 +17,8 @@ describe('Approvals Workflow', () => {
         render(<ApprovalsPage />);
         
         // Assert sidebar items are loaded
-        const title1 = screen.getByText('Episode 3.1 Teaser - Twitter');
-        const title2 = screen.getByText('Episode 3.1 Teaser - LinkedIn');
+        const title1 = screen.getAllByText('Episode 3.1 Teaser - Twitter')[0];
+        const title2 = screen.getAllByText('Episode 3.1 Teaser - LinkedIn')[0];
         expect(title1).not.toBeNull();
         expect(title2).not.toBeNull();
 

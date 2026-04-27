@@ -24,7 +24,10 @@ describe('Assets Workflow', () => {
             { id: '1', type: 'image', url: 'http://img1.com', prompt: 'hero image', createdAt: new Date().toISOString() },
             { id: '2', type: 'video', url: 'http://vid1.com', prompt: 'hero video', createdAt: new Date().toISOString() }
         ];
-        (listAssetsAction as any).mockResolvedValue(mockAssets);
+        (listAssetsAction as any).mockImplementation((type = 'all') => {
+            if (type === 'all') return Promise.resolve(mockAssets);
+            return Promise.resolve(mockAssets.filter((asset) => asset.type === type));
+        });
         (deleteAssetAction as any).mockResolvedValue({ success: true });
 
         // Act
@@ -37,19 +40,26 @@ describe('Assets Workflow', () => {
         });
 
         // Filter to images only
-        const imagesTab = screen.getByText(/Images/i);
+        const imagesTab = screen.getByRole('tab', { name: /Images/i });
+        fireEvent.mouseDown(imagesTab);
+        fireEvent.mouseUp(imagesTab);
         fireEvent.click(imagesTab);
 
         // listAssetsAction should be called again with 'image'
         await waitFor(() => {
             expect(listAssetsAction).toHaveBeenCalledWith('image');
+            expect(screen.getByText('hero image')).not.toBeNull();
+            expect(screen.queryByText('hero video')).toBeNull();
         });
 
         // Back to all to test deletion
-        const allTab = screen.getByText(/All/i);
+        const allTab = screen.getByRole('tab', { name: /All/i });
+        fireEvent.mouseDown(allTab);
+        fireEvent.mouseUp(allTab);
         fireEvent.click(allTab);
 
         await waitFor(() => {
+            expect(listAssetsAction).toHaveBeenCalledWith('all');
             expect(screen.getByText('hero video')).not.toBeNull();
         });
 

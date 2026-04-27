@@ -10,10 +10,10 @@
     "docs:serve": "mkdocs serve",
     "docs:build": "mkdocs build",
     "docs:deploy": "mkdocs gh-deploy --force",
-    "test": "vitest run",
-    "test:watch": "vitest",
-    "test:coverage": "vitest run --coverage",
-    "test:ci": "vitest run --coverage --reporter=junit --outputFile=test-results.xml",
+    "test": "NODE_OPTIONS=--experimental-sqlite vitest run",
+    "test:watch": "NODE_OPTIONS=--experimental-sqlite vitest",
+    "test:coverage": "NODE_OPTIONS=--experimental-sqlite vitest run --coverage",
+    "test:ci": "NODE_OPTIONS=--experimental-sqlite vitest run --coverage --reporter=junit --outputFile=test-results.xml",
     "prepare": "husky",
     "lint": "eslint 'src/**/*.ts'",
     "lint:fix": "eslint 'src/**/*.ts' --fix",
@@ -70,5 +70,8 @@
     "tsx": "^4.21.0",
     "typescript": "^5.9.3",
     "vitest": "^4.1.0"
+  },
+  "overrides": {
+    "protobufjs": "^7.5.5"
   }
 }
